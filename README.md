@@ -1,102 +1,34 @@
-# 🃏 PokéGrader — AI-Powered Pokémon Card Condition Grader
+# PokéGrader
 
-**Instantly grade your Pokémon cards using your phone's camera.**
+A computer vision tool that estimates Pokémon card condition grades on the PSA 1–10 scale from a phone camera photo.
 
-PokéGrader uses computer vision and deep learning to analyze Pokémon trading cards and assign a condition grade on the **PSA 1–10 scale** — no submission fees, no waiting weeks.
+**Status:** Early development — model training is in progress.
 
-> ⚠️ **Status: Early Development** — Model training is in progress. Star/watch this repo to follow along.
+## Idea
 
----
+Professional card grading (PSA, BGS, CGC) is slow and expensive. The goal here is to give collectors a quick, free estimate by analyzing the same factors the pros look at: centering, corner sharpness, edge wear, and surface condition.
 
-## 🎯 What It Does
+## Approach
 
-1. **Snap a photo** of your Pokémon card using your phone or webcam
-2. **AI analyzes** the card for surface scratches, edge wear, corner damage, and centering
-3. **Get an estimated PSA grade** (1–10) with a breakdown of each grading factor
+- Capture a card image via phone camera or webcam
+- Preprocess and segment the card from the background
+- Run sub-models for each grading factor (centering, corners, edges, surface)
+- Combine into a weighted composite grade (PSA 1–10 scale)
 
-## 📊 Grading Criteria
+## Tech
 
-PokéGrader evaluates the same factors professional graders use:
+Python, FastAPI, PyTorch, OpenCV. Frontend is lightweight HTML/JS using the browser Camera API for mobile capture.
 
-| Factor       | Description                                      | Weight |
-|--------------|--------------------------------------------------|--------|
-| **Centering** | Border symmetry on front and back                | 20%    |
-| **Corners**   | Sharpness and wear on all four corners           | 25%    |
-| **Edges**     | Chipping, nicks, and wear along card edges       | 25%    |
-| **Surface**   | Scratches, print defects, whitening, holo damage | 30%    |
+## What's Done / What's Next
 
-## 🏗️ Project Structure
+- [x] Project architecture
+- [ ] Data collection — sourcing card images with known PSA grades
+- [ ] Image preprocessing pipeline (crop, normalize, align)
+- [ ] Individual factor models (centering, corners, edges, surface)
+- [ ] Composite grade prediction
+- [ ] Web UI with live camera
+- [ ] Confidence scores and grade breakdowns
 
-```
-pokemon-card-grader/
-├── src/
-│   ├── model/          # Model architecture, training, and inference
-│   ├── api/            # FastAPI backend for serving predictions
-│   └── utils/          # Image preprocessing, grading logic
-├── web/
-│   ├── templates/      # HTML templates (camera UI)
-│   └── static/         # CSS, JS (camera capture, results display)
-├── data/
-│   ├── raw/            # Original card images
-│   ├── processed/      # Cleaned and normalized images
-│   └── augmented/      # Augmented training data
-├── notebooks/          # Exploration and model experimentation
-├── configs/            # Model and app configuration
-├── tests/              # Unit and integration tests
-└── docs/               # Additional documentation
-```
+## Disclaimer
 
-## 🛠️ Tech Stack
-
-- **Backend:** Python, FastAPI
-- **ML/CV:** PyTorch, torchvision, OpenCV
-- **Frontend:** HTML/CSS/JS with browser Camera API (mobile-friendly)
-- **Training:** Custom CNN / fine-tuned EfficientNet
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Python 3.10+
-- pip
-
-### Installation
-
-```bash
-git clone https://github.com/YOUR_USERNAME/pokemon-card-grader.git
-cd pokemon-card-grader
-pip install -r requirements.txt
-```
-
-### Run the App
-
-```bash
-python -m src.api.app
-```
-
-Then open `http://localhost:8000` on your phone or desktop browser.
-
-## 🗺️ Roadmap
-
-- [x] Project structure and architecture
-- [ ] Data collection pipeline (card images with known PSA grades)
-- [ ] Image preprocessing (crop, normalize, alignment)
-- [ ] Sub-model training (centering, corners, edges, surface)
-- [ ] Composite grade prediction (weighted ensemble → PSA 1–10)
-- [ ] Web UI with live camera capture
-- [ ] Confidence score and grade explanation
-- [ ] Mobile PWA support
-- [ ] Batch grading (multiple cards)
-- [ ] Price estimation based on grade + card ID
-
-## 🤝 Contributing
-
-This project is in early development. If you're interested in contributing — especially with labeled card image datasets — please open an issue or reach out!
-
-## 📜 License
-
-MIT License — see [LICENSE](LICENSE) for details.
-
-## ⚖️ Disclaimer
-
-PokéGrader provides **estimated grades for personal reference only**. It is not affiliated with PSA, BGS, CGC, or any official grading service. Grades are approximations and should not be used as a substitute for professional grading.
+This provides estimated grades for personal reference. Not affiliated with PSA, BGS, CGC, or any official grading service.
