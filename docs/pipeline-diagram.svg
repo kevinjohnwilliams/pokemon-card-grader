@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 680" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="900" y2="680">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#30363d"/>
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#E53935"/>
+    </marker>
+    <marker id="arrowDown" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#30363d"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="680" fill="url(#bg)" rx="12"/>
+  <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+    <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#161b22" stroke-width="0.5"/>
+  </pattern>
+  <rect width="900" height="680" fill="url(#grid)" rx="12"/>
+
+  <!-- Title -->
+  <text x="450" y="38" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#E53935" letter-spacing="4" font-weight="600">POKÉGRADER</text>
+  <text x="450" y="62" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" fill="#e6edf3" font-weight="700">Model Training Framework</text>
+
+  <!-- ============ DATA SOURCES ROW ============ -->
+
+  <text x="450" y="100" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#484f58" letter-spacing="3" font-weight="600">DATA SOURCES</text>
+
+  <!-- Source 1: Scraped Images -->
+  <rect x="55" y="115" width="250" height="100" rx="10" fill="#161b22" stroke="#FB8C00" stroke-width="1.5"/>
+  <text x="180" y="140" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#e6edf3" font-weight="700">📦 Scraped Images</text>
+  <text x="180" y="156" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#FB8C00">eBay PSA-graded listings</text>
+  <text x="180" y="178" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">Thousands of card images with</text>
+  <text x="180" y="192" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">known PSA grades from listings</text>
+  <!-- Badge -->
+  <rect x="240" y="108" width="70" height="18" rx="9" fill="#FB8C00" opacity="0.15"/>
+  <text x="275" y="120" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="8" fill="#FB8C00" font-weight="700">TRAINING</text>
+
+  <!-- Source 2: PSA Phone Photos -->
+  <rect x="325" y="115" width="250" height="100" rx="10" fill="#161b22" stroke="#43A047" stroke-width="1.5"/>
+  <text x="450" y="140" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#e6edf3" font-weight="700">📱 Our Phone Photos</text>
+  <text x="450" y="156" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#43A047">Cards we submit to PSA</text>
+  <text x="450" y="178" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">Photographed with the app before</text>
+  <text x="450" y="192" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">mailing — real camera conditions</text>
+  <!-- Badge -->
+  <rect x="490" y="108" width="90" height="18" rx="9" fill="#43A047" opacity="0.15"/>
+  <text x="535" y="120" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="8" fill="#43A047" font-weight="700">VAL + TEST</text>
+
+  <!-- Source 3: Augmentation -->
+  <rect x="595" y="115" width="250" height="100" rx="10" fill="#161b22" stroke="#8E24AA" stroke-width="1.5"/>
+  <text x="720" y="140" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#e6edf3" font-weight="700">🔄 Augmentation</text>
+  <text x="720" y="156" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#8E24AA">Phone camera simulation</text>
+  <text x="720" y="178" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">Blur, lighting, rotation, noise,</text>
+  <text x="720" y="192" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">JPEG artifacts on training data</text>
+  <!-- Badge -->
+  <rect x="771" y="108" width="80" height="18" rx="9" fill="#8E24AA" opacity="0.15"/>
+  <text x="811" y="120" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="8" fill="#8E24AA" font-weight="700">MULTIPLY ×5</text>
+
+  <!-- Arrows down from sources -->
+  <path d="M 180 215 L 180 250" stroke="#30363d" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 450 215 L 450 250" stroke="#30363d" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 720 215 L 720 235 L 305 235 L 305 250" stroke="#30363d" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>
+  <text x="510" y="232" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="8" fill="#8E24AA" opacity="0.6">applied to training images</text>
+
+  <!-- ============ DATASET SPLIT ROW ============ -->
+
+  <text x="450" y="268" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#484f58" letter-spacing="3" font-weight="600">DATASET</text>
+
+  <!-- Train split -->
+  <rect x="55" y="280" width="250" height="65" rx="8" fill="#161b22" stroke="#FB8C00" stroke-width="1" opacity="0.9"/>
+  <text x="75" y="302" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#FB8C00" font-weight="700">TRAIN</text>
+  <text x="155" y="302" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#8b949e">Scraped eBay images + augmented</text>
+  <text x="75" y="322" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">Model learns card grading patterns</text>
+  <rect x="75" y="332" width="210" height="4" rx="2" fill="#FB8C00" opacity="0.3"/>
+  <rect x="75" y="332" width="147" height="4" rx="2" fill="#FB8C00" opacity="0.8"/>
+  <text x="240" y="340" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="8" fill="#FB8C00">~70%</text>
+
+  <!-- Val split -->
+  <rect x="325" y="280" width="170" height="65" rx="8" fill="#161b22" stroke="#1E88E5" stroke-width="1" opacity="0.9"/>
+  <text x="345" y="302" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#1E88E5" font-weight="700">VALIDATE</text>
+  <text x="345" y="322" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">Our PSA phone photos</text>
+  <text x="345" y="336" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">Tunes for real-world use</text>
+
+  <!-- Test split -->
+  <rect x="515" y="280" width="170" height="65" rx="8" fill="#161b22" stroke="#43A047" stroke-width="1" opacity="0.9"/>
+  <text x="535" y="302" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#43A047" font-weight="700">TEST</text>
+  <text x="535" y="322" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">Held-out PSA phone photos</text>
+  <text x="535" y="336" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">Final accuracy measurement</text>
+
+  <!-- ============ MODEL TRAINING ============ -->
+
+  <!-- Arrows into model -->
+  <path d="M 180 345 L 180 385" stroke="#30363d" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 410 345 L 410 385" stroke="#30363d" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Model box -->
+  <rect x="55" y="395" width="490" height="85" rx="10" fill="#161b22" stroke="#E53935" stroke-width="1.5"/>
+  <text x="300" y="422" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#e6edf3" font-weight="700">🧠  EfficientNet-B0 — Fine-tuned Card Grader</text>
+  <text x="300" y="442" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#8b949e">Pretrained backbone → custom grading head → PSA 1-10 prediction</text>
+  <text x="300" y="462" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10" fill="#E53935">Train on scraped data  ·  Validate on phone photos  ·  Early stopping on val loss</text>
+
+  <!-- Test arrow -->
+  <path d="M 600 320 L 680 320 L 680 430 L 545 430" stroke="#43A047" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arrowRed)" opacity="0.6"/>
+  <text x="690" y="380" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9" fill="#43A047" opacity="0.7">final eval</text>
+
+  <!-- ============ OUTPUT ROW ============ -->
+
+  <path d="M 300 480 L 300 515" stroke="#30363d" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Checkpoint -->
+  <rect x="175" y="525" width="250" height="55" rx="8" fill="#161b22" stroke="#00ACC1" stroke-width="1.5"/>
+  <text x="300" y="550" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#e6edf3" font-weight="700">💾  Model Checkpoint</text>
+  <text x="300" y="567" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">Best weights saved → deployed to app</text>
+
+  <!-- Arrow to app -->
+  <path d="M 425 553 L 520 553" stroke="#30363d" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- App -->
+  <rect x="530" y="525" width="250" height="55" rx="8" fill="#161b22" stroke="#00ACC1" stroke-width="1.5"/>
+  <text x="655" y="550" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#e6edf3" font-weight="700">🚀  PokéGrader App</text>
+  <text x="655" y="567" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">Phone photo → instant PSA estimate</text>
+
+  <!-- ============ FEEDBACK LOOP ============ -->
+
+  <path d="M 780 553 L 830 553 L 830 165 L 575 165" stroke="#E53935" stroke-width="1.5" stroke-dasharray="6 3" opacity="0.5" marker-end="url(#arrowRed)"/>
+  <text x="855" y="370" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9" fill="#E53935" transform="rotate(-90, 855, 370)" text-anchor="middle" opacity="0.6">MORE PSA SUBMISSIONS → BETTER MODEL</text>
+
+  <!-- ============ KEY INSIGHT ============ -->
+  <rect x="100" y="610" width="700" height="50" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="450" y="632" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#e6edf3" font-weight="600">💡 Why this works</text>
+  <text x="450" y="649" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#8b949e">Scraped data gets training started fast. PSA phone photos validate the model works on real cameras. Each PSA batch makes it better.</text>
+</svg>
