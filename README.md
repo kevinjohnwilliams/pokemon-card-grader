@@ -15,13 +15,14 @@ Snap a photo of a card with your phone → the app detects the card, crops it, a
 - Training pipeline and data augmentation framework
 
 **What's next:**
-- Model training once scrape data is ready
-- Corner, edge, and surface condition analysis
+- Model training once TAG scrape data reaches target volume
+- Corner, edge, and surface condition analysis (using TAG sub-scores as labels)
+- Defect detection trained on TAG's identified dings
 - Composite grade prediction with confidence scores
 
 ## Training Strategy
 
-The model trains on scraped eBay images of PSA-graded cards, validates against our own phone photos with known PSA grades, and is tested on a held-out set of those same phone photos. Augmentation simulates real phone camera conditions (blur, lighting, noise) on the training data to close the gap between clean listing photos and real-world usage.
+The model trains on two data sources: scraped eBay images of PSA-graded cards and TAG Grading's detailed scoring reports. Validation and testing use our own phone photos submitted to PSA. Augmentation simulates real phone camera conditions (blur, lighting, noise) on the training data to close the gap between clean listing photos and real-world usage.
 
 <p align="center">
   <img src="docs/pipeline-diagram.svg" alt="PokéGrader Training Framework" width="800"/>
@@ -29,11 +30,38 @@ The model trains on scraped eBay images of PSA-graded cards, validates against o
 
 | Split | Source | Purpose |
 |-------|--------|---------|
-| **Train** | Scraped eBay PSA listings + augmentation | Thousands of images to learn grading patterns fast |
+| **Train** | Scraped eBay PSA listings + TAG reports + augmentation | Thousands of images with rich labels |
 | **Validate** | Our phone photos → submitted to PSA | Reality check — does the model work on real phone cameras? |
 | **Test** | Held-out phone photos with PSA grades | Final accuracy measurement, never seen during training |
 
 The feedback loop: as we submit more cards to PSA, the validation and test sets grow, and the model gets retrained with better real-world signal.
+
+## Data Collection
+
+### Why TAG Grading
+
+[TAG Grading](https://my.taggrading.com/) provides three layers of ground truth that make it exceptionally valuable for model training — far richer than a simple PSA 1–10 label:
+
+**TAG Score (0–1000)** — A continuous score that maps to the final 1–10 grade. Two cards can both be a "10 GEM MINT" but score 985 vs 970. This turns what would be a classification problem into a regression problem, giving the model gradient signal even from small differences between similar cards.
+
+**Per-Feature Sub-Scores** — Fray, Fill, and Angle scores (each 0–1000) for every corner and edge, front and back. These enable training specialized sub-models for each grading factor with their own granular labels.
+
+**Identified Defects** — Specific defect instances with notable grade impact: location, category (SURFACE, EDGE, CORNER), and type (INK DEFECT, etc.), each with a close-up image. Essentially free defect-detection annotation.
+
+### Data Strategy
+
+**Prioritize grade diversity, not card popularity.** A dinged corner looks the same on a Charizard as it does on a Caterpie. The model needs to learn grading features (edge whitening, corner fraying, surface scratches), not which Pokémon is on the card. Biasing toward popular cards risks overfitting to specific layouts and color patterns.
+
+**Prioritize set diversity.** Different eras have different border styles, holo patterns, print quality, and card stock. Training across multiple sets (Base Set, modern, Japanese, etc.) forces the model to generalize the actual grading signals rather than memorizing set-specific visual patterns.
+
+**Card-specific distribution can wait.** If we later add card identification or fine-tune based on user feedback in production, popularity weighting becomes relevant. But for training the grading model itself, grading features are card-agnostic.
+
+| Priority | What | Why |
+|----------|------|-----|
+| 🔴 High | Grade distribution (spread across 1–10 and 0–1000) | Model needs examples of every condition level |
+| 🔴 High | Set/era diversity (Base Set, modern, Japanese, etc.) | Generalize across border styles and print quality |
+| 🟡 Medium | Defect type coverage (ink, surface, corner wear, etc.) | Defect detection needs variety |
+| 🟢 Low | Card popularity (Charizard vs Caterpie) | Grading features are card-agnostic |
 
 ## Tech Stack
 
@@ -86,12 +114,12 @@ pokegrader/
 
 ## Grading Factors
 
-| Factor | Weight | Method | Status |
-|--------|--------|--------|--------|
-| Centering | 20% | Algorithmic (border analysis) | ✅ Working |
-| Corners | 25% | CNN (fine-tuned EfficientNet) | 🔄 Training data in progress |
-| Edges | 25% | CNN (fine-tuned EfficientNet) | 🔄 Training data in progress |
-| Surface | 30% | CNN (fine-tuned EfficientNet) | 🔄 Training data in progress |
+| Factor | Weight | Method | Training Labels | Status |
+|--------|--------|--------|-----------------|--------|
+| Centering | 20% | Algorithmic (border analysis) | TAG centering percentages | ✅ Working |
+| Corners | 25% | CNN (fine-tuned EfficientNet) | TAG Fray/Fill/Angle per corner (0–1000) | 🔄 Collecting data |
+| Edges | 25% | CNN (fine-tuned EfficientNet) | TAG Fray/Fill per edge (0–1000) | 🔄 Collecting data |
+| Surface | 30% | CNN (fine-tuned EfficientNet) | TAG defect annotations + overall score | 🔄 Collecting data |
 
 ## Disclaimer
 
