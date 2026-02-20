@@ -17,6 +17,7 @@ data/augmented/*
 !data/processed/.gitkeep
 !data/augmented/.gitkeep
 tag_dataset/
+data/
 
 # Model weights
 *.pt
@@ -41,3 +42,4 @@ Thumbs.db
 
 # Scripts
 tag_pipeline.py
+tag_batch_runner.py
