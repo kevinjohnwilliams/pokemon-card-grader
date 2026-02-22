@@ -43,3 +43,5 @@ Thumbs.db
 # Scripts
 tag_pipeline.py
 tag_batch_runner.py
+cert.pem
+key.pem

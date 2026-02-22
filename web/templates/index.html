@@ -5,355 +5,1005 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>PokéGrader — AI Card Grader</title>
+    <title>PokeGrader — AI Card Grader</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700;800&family=Orbitron:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0a0a0f;
-            --bg-card: #12121a;
-            --bg-elevated: #1a1a26;
-            --accent: #f6c831;
-            --accent-glow: rgba(246, 200, 49, 0.3);
-            --accent-dim: #c9a020;
-            --red: #ee4035;
-            --blue: #3b7dd8;
-            --green: #4caf50;
-            --text-primary: #f0f0f5;
-            --text-secondary: #8888a0;
-            --text-dim: #555568;
-            --border: rgba(255, 255, 255, 0.06);
-            --radius: 16px;
-            --radius-sm: 10px;
+            /* Silver metallic frame */
+            --frame-1: #c8ccd4;
+            --frame-2: #e2e6ec;
+            --frame-3: #a8aeb8;
+            --frame-4: #d4d8e0;
+            --frame-5: #8890a0;
+            --frame-shine: rgba(255,255,255,0.6);
+
+            /* Vivid palette */
+            --neon-green: #44e86c;
+            --neon-pink: #ff4d9a;
+            --neon-blue: #4d9aff;
+            --neon-purple: #a64dff;
+            --neon-yellow: #ffe14d;
+            --neon-orange: #ff8a4d;
+            --neon-cyan: #4de8e8;
+
+            /* Card internals */
+            --card-bg: #f8f6f0;
+            --card-bg-warm: #f2efe6;
+            --card-inner-border: #d0ccc0;
+            --text-on-card: #1a1a2e;
+            --text-dim-card: #6a6878;
+
+            /* Grading */
+            --grade-gem: #FFD700;
+            --grade-high: #44e86c;
+            --grade-mid: #ff8a4d;
+            --grade-low: #ff4d6a;
+
+            /* Energy type colors */
+            --energy-grass: #44e86c;
+            --energy-fire: #ff6644;
+            --energy-water: #4d9aff;
+            --energy-electric: #ffe14d;
+            --energy-psychic: #a64dff;
+
+            --bg-deep: #0c0c18;
+            --radius-card: 16px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-deep);
+            color: #e8e8f0;
             min-height: 100dvh;
             overflow-x: hidden;
         }
 
+        /* Deep cosmic background */
         body::before {
             content: '';
-            position: fixed;
-            inset: 0;
+            position: fixed; inset: 0;
             background:
-                radial-gradient(ellipse at 20% 0%, rgba(246, 200, 49, 0.04) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 100%, rgba(59, 125, 216, 0.03) 0%, transparent 60%);
-            pointer-events: none;
-            z-index: 0;
+                radial-gradient(circle at 20% 30%, rgba(68, 232, 108, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 20%, rgba(255, 77, 154, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 50% 80%, rgba(77, 154, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 60% 50%, rgba(166, 77, 255, 0.03) 0%, transparent 50%);
+            pointer-events: none; z-index: 0;
         }
 
-        /* ─── HEADER ─── */
-        .header {
-            position: sticky; top: 0; z-index: 100;
-            padding: 16px 20px;
+        /* Floating particles */
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background-image:
+                radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.15) 0%, transparent 100%),
+                radial-gradient(1px 1px at 30% 60%, rgba(68,232,108,0.2) 0%, transparent 100%),
+                radial-gradient(1px 1px at 50% 30%, rgba(255,77,154,0.15) 0%, transparent 100%),
+                radial-gradient(1px 1px at 70% 70%, rgba(77,154,255,0.2) 0%, transparent 100%),
+                radial-gradient(1px 1px at 90% 40%, rgba(255,225,77,0.15) 0%, transparent 100%),
+                radial-gradient(1.5px 1.5px at 15% 80%, rgba(166,77,255,0.2) 0%, transparent 100%),
+                radial-gradient(1px 1px at 85% 15%, rgba(77,232,232,0.15) 0%, transparent 100%),
+                radial-gradient(1px 1px at 45% 90%, rgba(255,138,77,0.15) 0%, transparent 100%);
+            pointer-events: none; z-index: 0;
+            animation: floatParticles 20s linear infinite;
+        }
+
+        @keyframes floatParticles {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-20px); }
+        }
+
+        .container {
+            position: relative; z-index: 1;
+            max-width: 440px; margin: 0 auto;
+            padding: 16px 12px 100px;
+        }
+
+        /* ═══════════════════════════════════════════
+           CARD FRAME — Silver Metallic
+           ═══════════════════════════════════════════ */
+        .card-frame {
+            position: relative;
+            background: linear-gradient(
+                155deg,
+                var(--frame-3) 0%,
+                var(--frame-2) 12%,
+                var(--frame-4) 25%,
+                var(--frame-1) 38%,
+                var(--frame-2) 50%,
+                var(--frame-3) 62%,
+                var(--frame-4) 75%,
+                var(--frame-2) 88%,
+                var(--frame-3) 100%
+            );
+            border-radius: var(--radius-card);
+            padding: 10px;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.15),
+                0 4px 16px rgba(0,0,0,0.4),
+                0 16px 48px rgba(0,0,0,0.35),
+                0 0 80px rgba(68,232,108,0.06),
+                0 0 80px rgba(255,77,154,0.04);
+        }
+
+        /* Holo rainbow sweep */
+        .card-frame::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(
+                var(--holo-angle, 135deg),
+                transparent 0%,
+                rgba(68,232,108,0.15) 15%,
+                rgba(77,154,255,0.12) 25%,
+                transparent 35%,
+                rgba(255,77,154,0.12) 45%,
+                rgba(166,77,255,0.1) 55%,
+                transparent 65%,
+                rgba(255,225,77,0.12) 75%,
+                rgba(77,232,232,0.1) 85%,
+                transparent 100%
+            );
+            background-size: 250% 250%;
+            animation: holoSweep 4s ease-in-out infinite;
+            border-radius: var(--radius-card);
+            pointer-events: none; z-index: 1;
+            mix-blend-mode: overlay;
+        }
+
+        /* Secondary metallic sheen */
+        .card-frame::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(
+                180deg,
+                var(--frame-shine) 0%,
+                transparent 8%,
+                transparent 92%,
+                rgba(0,0,0,0.08) 100%
+            );
+            border-radius: var(--radius-card);
+            pointer-events: none; z-index: 1;
+        }
+
+        @keyframes holoSweep {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+
+        .card-inner {
+            position: relative; z-index: 2;
+            background: var(--card-bg);
+            border-radius: 10px;
+            border: 1.5px solid var(--card-inner-border);
+            overflow: hidden;
+        }
+
+        /* ─── CARD HEADER ─── */
+        .card-header {
             display: flex; align-items: center; justify-content: space-between;
-            background: rgba(10, 10, 15, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
+            padding: 10px 14px 8px;
+            background: linear-gradient(180deg,
+                var(--card-bg-warm) 0%,
+                var(--card-bg) 100%
+            );
+            position: relative;
         }
 
-        .logo { display: flex; align-items: center; gap: 10px; }
+        /* Subtle gradient stripe behind header */
+        .card-header::after {
+            content: '';
+            position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg,
+                var(--neon-green),
+                var(--neon-blue),
+                var(--neon-purple),
+                var(--neon-pink),
+                var(--neon-orange),
+                var(--neon-yellow)
+            );
+            opacity: 0.5;
+        }
 
-        .logo-icon {
-            width: 36px; height: 36px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+        .card-name-area { display: flex; align-items: center; gap: 8px; }
+
+        .stage-badge {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 9px; font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #fff;
+            background: linear-gradient(135deg, var(--neon-green), #2ab854);
+            padding: 3px 10px;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(68,232,108,0.3);
+        }
+
+        .evolution-circle {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: linear-gradient(135deg, #e0e0e0, #f8f8f8);
+            border: 1.5px solid #c0c0c0;
             display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 0 20px var(--accent-glow);
+            font-size: 16px;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.6), 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .logo-text { font-weight: 800; font-size: 20px; letter-spacing: -0.5px; }
-        .logo-text span { color: var(--accent); }
+        .card-title {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 22px; font-weight: 800;
+            color: var(--text-on-card);
+            letter-spacing: -0.5px;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+        }
 
-        .version-badge {
-            font-family: 'Space Mono', monospace;
-            font-size: 10px; color: var(--text-dim);
-            background: var(--bg-elevated);
-            padding: 4px 8px; border-radius: 6px;
-            border: 1px solid var(--border);
+        .hp-area { display: flex; align-items: center; gap: 5px; }
+
+        .hp-text {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 10px; font-weight: 700;
+            color: var(--text-dim-card);
             letter-spacing: 0.5px;
         }
 
-        /* ─── MAIN ─── */
-        .container {
-            position: relative; z-index: 1;
-            max-width: 480px; margin: 0 auto;
-            padding: 20px 16px 120px;
-        }
-
-        /* ─── CAMERA ─── */
-        .camera-wrapper {
-            position: relative; width: 100%; aspect-ratio: 3/4;
-            border-radius: var(--radius); overflow: hidden;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-        }
-
-        .camera-wrapper video,
-        .camera-wrapper img {
-            width: 100%; height: 100%; object-fit: cover; display: block;
-        }
-
-        #cameraFeed { display: none; }
-        #capturedImage { display: none; }
-        #croppedCard { display: none; }
-
-        .camera-placeholder {
-            position: absolute; inset: 0;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            gap: 16px; color: var(--text-secondary);
-            cursor: pointer;
-        }
-
-        .camera-placeholder svg { width: 48px; height: 48px; opacity: 0.4; }
-        .camera-placeholder p { font-size: 14px; opacity: 0.6; }
-        .camera-placeholder.hidden { display: none; }
-
-        /* Card guide overlay */
-        .card-guide {
-            position: absolute; inset: 0;
-            display: none; align-items: center; justify-content: center;
-            pointer-events: none; z-index: 10;
-        }
-
-        .card-guide.visible { display: flex; }
-
-        .card-outline {
-            width: 62%; aspect-ratio: 2.5/3.5;
-            border: 2px dashed rgba(246, 200, 49, 0.5);
-            border-radius: 12px; position: relative;
-        }
-
-        .card-outline::before {
-            content: ''; position: absolute; inset: -1px;
-            border-radius: 12px;
-            box-shadow: 0 0 60px rgba(0, 0, 0, 0.8) inset;
-        }
-
-        .card-guide-label {
-            position: absolute; bottom: -32px; left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px; color: var(--accent);
-            font-weight: 500; white-space: nowrap;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-            opacity: 0.8;
-        }
-
-        /* Corner marks */
-        .corner-marks {
-            position: absolute; inset: 12px;
-            pointer-events: none; z-index: 5;
-            display: none;
-        }
-        .corner-marks.visible { display: block; }
-
-        .corner-mark { position: absolute; width: 20px; height: 20px; border-color: var(--accent); opacity: 0.4; }
-        .corner-mark.tl { top: 0; left: 0; border-top: 2px solid; border-left: 2px solid; border-radius: 4px 0 0 0; }
-        .corner-mark.tr { top: 0; right: 0; border-top: 2px solid; border-right: 2px solid; border-radius: 0 4px 0 0; }
-        .corner-mark.bl { bottom: 0; left: 0; border-bottom: 2px solid; border-left: 2px solid; border-radius: 0 0 0 4px; }
-        .corner-mark.br { bottom: 0; right: 0; border-bottom: 2px solid; border-right: 2px solid; border-radius: 0 0 4px 0; }
-
-        /* Loading overlay */
-        .loading-overlay {
-            position: absolute; inset: 0;
-            background: rgba(10, 10, 15, 0.85);
-            backdrop-filter: blur(8px);
-            display: none; align-items: center; justify-content: center;
-            flex-direction: column; gap: 16px;
-            border-radius: var(--radius); z-index: 20;
-        }
-        .loading-overlay.visible { display: flex; }
-
-        .spinner {
-            width: 40px; height: 40px;
-            border: 3px solid var(--bg-elevated);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .loading-text { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
-        .loading-step { font-size: 12px; color: var(--text-dim); font-weight: 400; }
-
-        /* Error overlay */
-        .error-overlay {
-            position: absolute; inset: 0;
-            background: rgba(10, 10, 15, 0.9);
-            display: none; align-items: center; justify-content: center;
-            flex-direction: column; gap: 12px; padding: 32px;
-            border-radius: var(--radius); z-index: 20;
-            text-align: center;
-        }
-        .error-overlay.visible { display: flex; }
-        .error-overlay .error-icon { font-size: 36px; }
-        .error-overlay .error-msg { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
-
-        /* ─── CONTROLS ─── */
-        .controls {
-            display: flex; align-items: center; justify-content: center;
-            gap: 24px; margin-top: 24px;
-        }
-
-        .btn-capture {
-            width: 72px; height: 72px; border-radius: 50%;
-            border: 3px solid var(--accent); background: transparent;
-            cursor: pointer; position: relative; transition: all 0.2s ease;
-        }
-
-        .btn-capture::after {
-            content: ''; position: absolute; inset: 5px;
-            border-radius: 50%; background: var(--accent);
-            transition: all 0.15s ease;
-        }
-
-        .btn-capture:active::after { inset: 8px; background: #fff; }
-        .btn-capture:active { transform: scale(0.95); }
-        .btn-capture:disabled { opacity: 0.3; cursor: not-allowed; }
-
-        .btn-secondary {
-            width: 48px; height: 48px; border-radius: 50%;
-            border: 1px solid var(--border); background: var(--bg-elevated);
-            color: var(--text-secondary); cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .btn-secondary:active { transform: scale(0.93); background: var(--bg-card); }
-        .btn-secondary svg { width: 22px; height: 22px; }
-        .btn-secondary.hidden { opacity: 0; pointer-events: none; }
-
-        /* ─── UPLOAD ─── */
-        .upload-section { margin-top: 20px; text-align: center; }
-
-        .upload-divider { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-        .upload-divider::before, .upload-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-        .upload-divider span { font-size: 12px; color: var(--text-dim); font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
-
-        .btn-upload {
-            width: 100%; padding: 14px; border-radius: var(--radius-sm);
-            border: 1px dashed rgba(255,255,255,0.1); background: var(--bg-card);
-            color: var(--text-secondary); font-family: 'Outfit', sans-serif;
-            font-size: 14px; font-weight: 500; cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-
-        .btn-upload:active { background: var(--bg-elevated); }
-        .btn-upload svg { width: 18px; height: 18px; opacity: 0.6; }
-        #fileInput { display: none; }
-
-        /* ─── RESULTS ─── */
-        .results-panel {
-            margin-top: 24px; display: none;
-            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .results-panel.visible { display: block; }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Cropped card preview */
-        .cropped-preview {
-            display: none;
-            margin-bottom: 16px;
-            border-radius: var(--radius);
-            overflow: hidden;
-            border: 1px solid var(--border);
-        }
-
-        .cropped-preview.visible { display: block; }
-
-        .cropped-preview img {
-            width: 100%; display: block;
-        }
-
-        .cropped-label {
-            padding: 10px 16px;
-            background: var(--bg-card);
-            font-size: 12px; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 1px;
-            color: var(--text-dim);
-            display: flex; align-items: center; gap: 8px;
-        }
-
-        .cropped-label .dot {
-            width: 6px; height: 6px; border-radius: 50%;
-            background: var(--green);
-        }
-
-        /* Grade card */
-        .grade-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px; text-align: center;
-        }
-
-        .grade-header-label {
-            font-size: 12px; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 1.5px;
-            color: var(--text-dim); margin-bottom: 4px;
-        }
-
-        .grade-note {
-            font-size: 11px; color: var(--text-dim);
-            margin-bottom: 12px;
-        }
-
-        .grade-score {
-            font-size: 72px; font-weight: 900;
-            line-height: 1; letter-spacing: -3px;
-            background: linear-gradient(135deg, var(--accent), #fff);
+        .hp-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px; font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-orange));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .grade-description {
-            font-size: 16px; font-weight: 600;
-            color: var(--accent); margin-top: 4px; margin-bottom: 24px;
+        .type-energy-icon {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-yellow), #ffcc00);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px;
+            box-shadow: 0 2px 8px rgba(255,225,77,0.4), inset 0 1px 0 rgba(255,255,255,0.5);
+            border: 1.5px solid rgba(0,0,0,0.08);
         }
 
-        /* Factor rows */
-        .factors-section {
+        .evolves-text {
+            font-size: 9px; color: var(--text-dim-card);
+            font-style: italic; margin-top: -2px; padding-left: 40px;
+        }
+
+        /* ─── IMAGE WINDOW — Vibrant border ─── */
+        .card-image-frame {
+            margin: 6px 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 4/3;
+            background: var(--bg-deep);
+        }
+
+        /* Vivid multi-color border */
+        .card-image-border {
+            position: absolute; inset: 0;
+            border-radius: 8px;
+            padding: 3px;
+            background: linear-gradient(
+                135deg,
+                var(--neon-green) 0%,
+                var(--neon-cyan) 20%,
+                var(--neon-blue) 35%,
+                var(--neon-purple) 50%,
+                var(--neon-pink) 65%,
+                var(--neon-orange) 80%,
+                var(--neon-yellow) 100%
+            );
+            background-size: 300% 300%;
+            animation: borderShift 6s ease-in-out infinite;
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        @keyframes borderShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .card-image-inner {
+            position: relative;
+            width: 100%; height: 100%;
+            border-radius: 5px;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .card-image-inner video,
+        .card-image-inner img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+
+        #cameraFeed { display: none; }
+        #capturedImage { display: none; }
+
+        /* Atmospheric placeholder with animated gradient */
+        .camera-placeholder {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 14px;
+            cursor: pointer;
+            background: linear-gradient(
+                135deg,
+                #0c0c1a 0%,
+                #141428 30%,
+                #0e1225 60%,
+                #0c0c1a 100%
+            );
+            overflow: hidden;
+        }
+
+        /* Animated ambient glow inside placeholder */
+        .camera-placeholder::before {
+            content: '';
+            position: absolute; inset: -50%;
+            background:
+                radial-gradient(circle at 30% 40%, rgba(68,232,108,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(255,77,154,0.06) 0%, transparent 50%),
+                radial-gradient(circle at 50% 30%, rgba(77,154,255,0.06) 0%, transparent 50%);
+            animation: ambientPulse 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes ambientPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+            50% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+        }
+
+        .camera-placeholder svg {
+            width: 48px; height: 48px;
+            color: rgba(255,255,255,0.25);
+            position: relative; z-index: 1;
+            filter: drop-shadow(0 0 8px rgba(68,232,108,0.2));
+        }
+
+        .camera-placeholder p {
+            font-size: 13px; font-weight: 600;
+            color: rgba(255,255,255,0.35);
+            position: relative; z-index: 1;
+        }
+
+        .camera-placeholder.hidden { display: none; }
+
+        /* Card guide */
+        .card-guide {
+            position: absolute; inset: 0;
+            display: none; align-items: center; justify-content: center;
+            pointer-events: none; z-index: 10;
+        }
+        .card-guide.visible { display: flex; }
+
+        .card-outline {
+            width: 56%; aspect-ratio: 2.5/3.5;
+            border: 2px dashed rgba(68,232,108,0.5);
+            border-radius: 10px; position: relative;
+            box-shadow: 0 0 20px rgba(68,232,108,0.1);
+        }
+
+        .card-guide-label {
+            position: absolute; bottom: -30px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px; color: var(--neon-green);
+            font-weight: 600; white-space: nowrap;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+            letter-spacing: 0.5px;
+        }
+
+        /* Animated corner energy orbs */
+        .corner-orb {
+            position: absolute; width: 14px; height: 14px; border-radius: 50%;
+            display: none; z-index: 6;
+            box-shadow: 0 0 10px currentColor;
+            animation: orbPulse 2s ease-in-out infinite;
+        }
+        .corner-orb.visible { display: block; }
+        .corner-orb.tl { top: 10px; left: 10px; background: var(--neon-green); color: var(--neon-green); animation-delay: 0s; }
+        .corner-orb.tr { top: 10px; right: 10px; background: var(--neon-blue); color: var(--neon-blue); animation-delay: 0.5s; }
+        .corner-orb.bl { bottom: 10px; left: 10px; background: var(--neon-orange); color: var(--neon-orange); animation-delay: 1s; }
+        .corner-orb.br { bottom: 10px; right: 10px; background: var(--neon-purple); color: var(--neon-purple); animation-delay: 1.5s; }
+
+        @keyframes orbPulse {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 1; }
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: absolute; inset: 0;
+            background: rgba(12, 12, 24, 0.92);
+            backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; gap: 16px; z-index: 20;
+        }
+        .loading-overlay.visible { display: flex; }
+
+        .grade-spinner {
+            width: 44px; height: 44px; border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.08);
+            border-top-color: var(--neon-green);
+            border-right-color: var(--neon-pink);
+            border-bottom-color: var(--neon-blue);
+            animation: spin 0.7s linear infinite;
+            box-shadow: 0 0 20px rgba(68,232,108,0.15);
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 14px; font-weight: 700;
+            background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .loading-step { font-size: 11px; color: rgba(255,255,255,0.3); }
+
+        /* Error */
+        .error-overlay {
+            position: absolute; inset: 0;
+            background: rgba(12,12,24,0.94);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; gap: 10px; padding: 24px; z-index: 20; text-align: center;
+        }
+        .error-overlay.visible { display: flex; }
+        .error-overlay .error-icon { font-size: 36px; }
+        .error-overlay .error-msg { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.5; }
+
+        /* Quality check overlay */
+        .quality-overlay {
+            position: absolute; inset: 0;
+            background: rgba(12,12,24,0.94);
+            backdrop-filter: blur(6px);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; gap: 14px; padding: 20px; z-index: 21; text-align: center;
+        }
+        .quality-overlay.visible { display: flex; }
+
+        .quality-icon { font-size: 32px; }
+
+        .quality-title {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 15px; font-weight: 700;
+            color: var(--neon-yellow);
+        }
+
+        .quality-issues {
+            display: flex; flex-direction: column; gap: 8px;
+            width: 100%;
+        }
+
+        .quality-issue {
+            display: flex; align-items: flex-start; gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            border-left: 3px solid var(--neon-yellow);
             text-align: left;
         }
 
-        .factor-section-label {
-            font-size: 11px; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 1px;
-            color: var(--text-dim); margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border);
+        .quality-issue.severe {
+            border-left-color: var(--neon-pink);
         }
 
-        .grade-factors { display: flex; flex-direction: column; gap: 14px; }
+        .quality-issue-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
 
-        .factor-row {
-            display: flex; align-items: center; gap: 12px;
+        .quality-issue-text {
+            font-size: 12px; color: rgba(255,255,255,0.7);
+            line-height: 1.4;
+        }
+        .quality-issue-text strong {
+            color: rgba(255,255,255,0.9);
+            font-weight: 700;
         }
 
-        .factor-name {
-            font-size: 13px; font-weight: 500;
-            color: var(--text-secondary);
-            min-width: 80px;
+        .quality-actions {
+            display: flex; gap: 10px; margin-top: 4px; width: 100%;
         }
 
-        .factor-bar-track {
-            flex: 1; height: 6px;
-            background: var(--bg-primary);
-            border-radius: 3px; overflow: hidden;
+        .quality-btn {
+            flex: 1; padding: 10px; border-radius: 8px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 13px; font-weight: 700;
+            cursor: pointer; border: none;
+            transition: all 0.15s ease;
+        }
+
+        .quality-btn:active { transform: scale(0.96); }
+
+        .quality-btn-retake {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+            color: #fff;
+            box-shadow: 0 2px 10px rgba(77,232,232,0.3);
+        }
+
+        .quality-btn-continue {
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        /* ─── DESCRIPTION BAR ─── */
+        .card-description-bar {
+            margin: 4px 12px 6px;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 4px;
+            font-size: 10.5px; color: var(--text-dim-card);
+            font-style: italic; line-height: 1.5;
+            text-align: center;
+        }
+
+        /* ─── CONTROLS — attack area ─── */
+        .controls-area {
+            padding: 6px 14px 4px;
+            position: relative;
+        }
+
+        /* Rainbow divider line before attacks */
+        .controls-area::before {
+            content: '';
+            position: absolute; top: 0; left: 10px; right: 10px; height: 1.5px;
+            background: linear-gradient(90deg,
+                transparent,
+                var(--neon-green) 15%,
+                var(--neon-blue) 35%,
+                var(--neon-purple) 50%,
+                var(--neon-pink) 65%,
+                var(--neon-yellow) 85%,
+                transparent
+            );
+            opacity: 0.4;
+        }
+
+        /* Attack row: Capture */
+        .attack-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 0;
+        }
+
+        .attack-row + .attack-row {
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .energy-cost { display: flex; gap: 3px; flex-shrink: 0; }
+
+        .energy-orb {
+            width: 20px; height: 20px; border-radius: 50%;
+            border: 1.5px solid rgba(0,0,0,0.1);
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.5), 0 1px 3px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .energy-orb.electric { background: linear-gradient(135deg, var(--neon-yellow), #ffcc00); }
+        .energy-orb.colorless { background: linear-gradient(135deg, #e8e8e8, #fff); }
+
+        .energy-orb-inner {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(255,255,255,0.6);
+        }
+
+        .attack-info { flex: 1; }
+
+        .attack-name {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 15px; font-weight: 800;
+            color: var(--text-on-card);
+        }
+
+        .attack-desc {
+            font-size: 10.5px; color: var(--text-dim-card);
+            line-height: 1.4; margin-top: 1px;
+        }
+
+        .attack-damage {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px; font-weight: 900;
+            color: var(--text-on-card);
+            min-width: 48px; text-align: right;
+        }
+
+        /* Capture button — Camera shutter lens */
+        .btn-capture-shutter {
+            width: 58px; height: 58px; border-radius: 50%;
+            border: 3px solid var(--frame-3); cursor: pointer;
+            position: relative;
+            background: linear-gradient(145deg, #2a2a3e, #1a1a2e);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        /* Lens ring */
+        .btn-capture-shutter::before {
+            content: '';
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%,-50%);
+            width: 38px; height: 38px; border-radius: 50%;
+            border: 2.5px solid var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(77,232,232,0.25), inset 0 0 10px rgba(77,232,232,0.1);
+            z-index: 2;
+        }
+
+        /* Center dot */
+        .btn-capture-shutter::after {
+            content: '';
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%,-50%);
+            width: 12px; height: 12px; border-radius: 50%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 8px rgba(77,232,232,0.5);
+            z-index: 3;
+            transition: all 0.15s ease;
+        }
+
+        .btn-capture-shutter:active { transform: scale(0.9); }
+        .btn-capture-shutter:active::after { background: #fff; width: 16px; height: 16px; box-shadow: 0 0 16px rgba(255,255,255,0.6); }
+        .btn-capture-shutter:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* Side buttons */
+        .btn-action {
+            width: 38px; height: 38px; border-radius: 50%;
+            border: 1.5px solid var(--card-inner-border);
+            background: var(--card-bg-warm);
+            color: var(--text-dim-card); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+        .btn-action:active { transform: scale(0.9); background: #e8e4d8; }
+        .btn-action svg { width: 18px; height: 18px; }
+        .btn-action.hidden { opacity: 0; pointer-events: none; }
+
+        .capture-controls {
+            display: flex; align-items: center; justify-content: center;
+            gap: 16px; padding: 8px 0 4px;
+        }
+
+        /* Upload "attack" row */
+        .upload-attack { cursor: pointer; }
+        .upload-attack:active .attack-name { color: var(--neon-blue); }
+
+        #fileInput { display: none; }
+
+        /* ─── CARD BOTTOM SECTION ─── */
+        .card-bottom-section {
+            position: relative;
+        }
+
+        /* Rainbow divider */
+        .rainbow-divider {
+            height: 2px;
+            background: linear-gradient(90deg,
+                var(--neon-green),
+                var(--neon-cyan),
+                var(--neon-blue),
+                var(--neon-purple),
+                var(--neon-pink),
+                var(--neon-orange),
+                var(--neon-yellow)
+            );
+            opacity: 0.6;
+        }
+
+        /* Weakness / Resistance / Retreat bar */
+        .wrr-bar {
+            display: flex; align-items: center;
+            padding: 8px 14px;
+            gap: 4px;
+            background: var(--card-bg-warm);
+        }
+
+        .wrr-item {
+            display: flex; align-items: center; gap: 4px;
+            flex: 1;
+        }
+
+        .wrr-label {
+            font-size: 8px; font-weight: 700;
+            text-transform: lowercase;
+            color: var(--text-dim-card);
+        }
+
+        .wrr-value {
+            display: flex; align-items: center; gap: 2px;
+        }
+
+        .wrr-energy {
+            width: 14px; height: 14px; border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .wrr-separator {
+            width: 1px; height: 16px;
+            background: var(--card-inner-border);
+            margin: 0 4px;
+        }
+
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+        }
+        .status-dot.live { background: var(--neon-green); box-shadow: 0 0 6px var(--neon-green); }
+        .status-dot.soon { background: rgba(0,0,0,0.12); }
+
+        .status-text {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim-card);
+        }
+
+        /* Flavor text / footer */
+        .card-flavor {
+            padding: 6px 14px 8px;
+            font-size: 9px; color: var(--text-dim-card);
+            text-align: center; line-height: 1.4;
+            border-top: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .card-illus {
+            padding: 2px 14px 6px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 8px; color: rgba(0,0,0,0.25);
+        }
+
+
+        /* ═══════════════════════════════════════════
+           RESULTS CARD — Blue/Purple Theme
+           ═══════════════════════════════════════════ */
+        .results-card-frame {
+            display: none;
+            margin-top: 20px;
+            position: relative;
+            background: linear-gradient(
+                155deg,
+                #3a4878 0%,
+                #5068a0 12%,
+                #4058a0 25%,
+                #5874b8 38%,
+                #4a64a8 50%,
+                #3a5090 62%,
+                #506cb0 75%,
+                #4a64a8 88%,
+                #3a4878 100%
+            );
+            border-radius: var(--radius-card);
+            padding: 10px;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.1),
+                0 4px 16px rgba(0,0,0,0.4),
+                0 16px 48px rgba(0,0,0,0.35),
+                0 0 60px rgba(77,154,255,0.08);
+            animation: cardSlam 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .results-card-frame.visible { display: block; }
+
+        @keyframes cardSlam {
+            0% { opacity: 0; transform: translateY(40px) scale(0.94) rotate(-1deg); }
+            60% { transform: translateY(-4px) scale(1.01) rotate(0.3deg); }
+            100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+        }
+
+        .results-card-frame::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(
+                135deg,
+                transparent 0%,
+                rgba(68,232,108,0.1) 20%,
+                rgba(77,154,255,0.12) 35%,
+                transparent 45%,
+                rgba(255,225,77,0.1) 60%,
+                rgba(255,77,154,0.08) 75%,
+                transparent 100%
+            );
+            background-size: 250% 250%;
+            animation: holoSweep 5s ease-in-out infinite;
+            border-radius: var(--radius-card);
+            pointer-events: none; z-index: 1;
+            mix-blend-mode: overlay;
+        }
+
+        .results-card-frame::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 8%, transparent 92%, rgba(0,0,0,0.1) 100%);
+            border-radius: var(--radius-card);
+            pointer-events: none; z-index: 1;
+        }
+
+        .results-inner {
+            position: relative; z-index: 2;
+            background: var(--card-bg);
+            border-radius: 10px;
+            border: 1.5px solid #6a88c8;
+            overflow: hidden;
+        }
+
+        .results-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px 8px;
+            position: relative;
+        }
+
+        .results-header::after {
+            content: '';
+            position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg,
+                var(--neon-blue),
+                var(--neon-purple),
+                var(--neon-pink),
+                var(--neon-cyan)
+            );
+            opacity: 0.5;
+        }
+
+        .results-name-area { display: flex; align-items: center; gap: 8px; }
+
+        .report-badge {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 9px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            color: #fff;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            padding: 3px 10px; border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(77,154,255,0.3);
+        }
+
+        .results-title {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 20px; font-weight: 800;
+            color: var(--text-on-card);
+        }
+
+        .grade-hp-area { display: flex; align-items: center; gap: 5px; }
+
+        .grade-label-sm {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 10px; font-weight: 700;
+            color: var(--text-dim-card);
+        }
+
+        .grade-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px; font-weight: 900;
+            line-height: 1;
+            transition: all 0.3s ease;
+        }
+
+        .grade-number.gem {
+            background: linear-gradient(135deg, #ffd700, #fff, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 8px rgba(255,215,0,0.4));
+        }
+        .grade-number.high {
+            background: linear-gradient(135deg, var(--neon-green), #80ffaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .grade-number.mid {
+            background: linear-gradient(135deg, var(--neon-orange), var(--neon-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .grade-number.low {
+            background: linear-gradient(135deg, var(--grade-low), #ff8888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grade-type-icon {
+            width: 26px; height: 26px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px;
+            border: 1.5px solid rgba(0,0,0,0.08);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5);
+        }
+
+        /* Cropped preview */
+        .results-image-frame {
+            margin: 6px 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: none;
+            position: relative;
+        }
+
+        .results-image-border {
+            position: absolute; inset: 0;
+            border-radius: 8px; padding: 3px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple), var(--neon-pink), var(--neon-cyan));
+            background-size: 300% 300%;
+            animation: borderShift 6s ease-in-out infinite;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            z-index: 2; pointer-events: none;
+        }
+
+        .results-image-frame.visible { display: block; }
+        .results-image-frame img { width: 100%; display: block; border-radius: 5px; }
+
+        .detected-label {
+            position: absolute; top: 8px; left: 8px; z-index: 3;
+            padding: 4px 10px; border-radius: 8px;
+            background: rgba(12,12,24,0.8);
+            backdrop-filter: blur(8px);
+            display: flex; align-items: center; gap: 6px;
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            color: var(--neon-green);
+        }
+
+        .dot-pulse {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--neon-green);
+            box-shadow: 0 0 6px var(--neon-green);
+            animation: orbPulse 1.5s ease-in-out infinite;
+        }
+
+        /* Grade description banner */
+        .grade-desc-banner {
+            margin: 4px 10px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 14px; font-weight: 800;
+            text-align: center;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .grade-desc-banner.gem { background: linear-gradient(90deg, rgba(255,215,0,0.12), rgba(255,215,0,0.06)); color: #b8960a; border: 1px solid rgba(255,215,0,0.15); }
+        .grade-desc-banner.high { background: rgba(68,232,108,0.08); color: #2a8040; border: 1px solid rgba(68,232,108,0.12); }
+        .grade-desc-banner.mid { background: rgba(255,138,77,0.08); color: #a05020; border: 1px solid rgba(255,138,77,0.12); }
+        .grade-desc-banner.low { background: rgba(255,77,106,0.08); color: #a03040; border: 1px solid rgba(255,77,106,0.12); }
+
+        /* Factor attacks */
+        .factor-attacks { padding: 6px 14px 2px; }
+
+        .factor-attack {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .factor-attack:last-child { border-bottom: none; }
+
+        .factor-energy-orb {
+            width: 24px; height: 24px; border-radius: 50%;
+            border: 1.5px solid rgba(0,0,0,0.08);
+            flex-shrink: 0;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), 0 1px 4px rgba(0,0,0,0.1);
+        }
+        .factor-energy-orb.centering { background: linear-gradient(135deg, var(--energy-electric), #ffee88); }
+        .factor-energy-orb.corners { background: linear-gradient(135deg, var(--energy-grass), #88ff99); }
+        .factor-energy-orb.edges { background: linear-gradient(135deg, var(--energy-water), #88bbff); }
+        .factor-energy-orb.surface { background: linear-gradient(135deg, var(--energy-psychic), #cc88ff); }
+
+        .factor-info { flex: 1; }
+
+        .factor-attack-name {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 14px; font-weight: 700;
+            color: var(--text-on-card);
+        }
+
+        .factor-bar {
+            margin-top: 4px; height: 5px;
+            border-radius: 3px;
+            background: rgba(0,0,0,0.06);
+            overflow: hidden;
         }
 
         .factor-bar-fill {
@@ -361,70 +1011,83 @@
             transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
             width: 0%;
         }
+        .factor-bar-fill.high { background: linear-gradient(90deg, var(--neon-green), #80ffaa); }
+        .factor-bar-fill.mid { background: linear-gradient(90deg, var(--neon-orange), var(--neon-yellow)); }
+        .factor-bar-fill.low { background: linear-gradient(90deg, var(--grade-low), #ff8888); }
+        .factor-bar-fill.disabled { background: rgba(0,0,0,0.05); width: 100% !important; }
 
-        .factor-bar-fill.high { background: linear-gradient(90deg, var(--green), #81c784); }
-        .factor-bar-fill.mid { background: linear-gradient(90deg, var(--accent), #fdd835); }
-        .factor-bar-fill.low { background: linear-gradient(90deg, var(--red), #ef5350); }
-        .factor-bar-fill.disabled { background: var(--bg-elevated); }
-
-        .factor-value {
-            font-family: 'Space Mono', monospace;
-            font-size: 12px; color: var(--text-primary);
-            min-width: 36px; text-align: right;
+        .factor-dmg {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px; font-weight: 800;
+            color: var(--text-on-card);
+            min-width: 44px; text-align: right;
+        }
+        .factor-dmg.soon {
+            font-size: 10px; font-weight: 700;
+            color: var(--text-dim-card);
+            font-family: 'Barlow Condensed', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .factor-value.coming-soon {
-            color: var(--text-dim); font-family: 'Outfit', sans-serif;
-            font-size: 11px;
+        /* Centering detail — flavor text style */
+        .centering-flavor {
+            margin: 6px 10px 8px; padding: 12px;
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 6px;
+            background: rgba(0,0,0,0.015);
         }
 
-        /* Centering detail box */
-        .centering-detail {
-            margin-top: 16px; padding: 16px;
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
+        .centering-flavor-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 10px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            color: var(--neon-blue);
+            margin-bottom: 10px;
         }
 
-        .centering-detail-title {
-            font-size: 12px; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 1px;
-            color: var(--accent); margin-bottom: 12px;
-        }
-
-        .centering-ratios {
-            display: grid; grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .ratio-item {
-            display: flex; flex-direction: column; gap: 4px;
-        }
-
-        .ratio-label { font-size: 11px; color: var(--text-dim); }
-
+        .ratio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ratio-item { display: flex; flex-direction: column; gap: 2px; }
+        .ratio-label { font-size: 10px; color: var(--text-dim-card); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         .ratio-value {
-            font-family: 'Space Mono', monospace;
-            font-size: 18px; font-weight: 700;
-            color: var(--text-primary);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px; font-weight: 800;
+            color: var(--text-on-card);
         }
 
-        .centering-desc {
-            margin-top: 12px; font-size: 13px;
-            color: var(--text-secondary); line-height: 1.5;
+        .centering-desc-text {
+            margin-top: 10px;
+            font-size: 11.5px; color: var(--text-dim-card);
+            line-height: 1.5; font-style: italic;
         }
 
-        /* Info note */
-        .info-note {
-            margin-top: 16px; padding: 12px;
-            background: rgba(246, 200, 49, 0.05);
-            border: 1px solid rgba(246, 200, 49, 0.1);
-            border-radius: var(--radius-sm);
-            font-size: 12px; color: var(--text-dim); line-height: 1.5;
+        /* Results bottom */
+        .results-rainbow-divider {
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple), var(--neon-pink), var(--neon-cyan));
+            opacity: 0.5;
         }
-        .info-note strong { color: var(--accent); }
 
-        /* Flash effect */
+        .results-bottom-bar {
+            padding: 8px 14px;
+            display: flex; justify-content: space-between;
+            background: var(--card-bg-warm);
+        }
+
+        .result-meta { display: flex; flex-direction: column; gap: 1px; }
+        .result-meta-label { font-size: 8px; color: var(--text-dim-card); font-weight: 700; text-transform: lowercase; }
+        .result-meta-value {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 11px; font-weight: 700; color: var(--text-on-card);
+        }
+
+        .results-note {
+            padding: 4px 14px 8px;
+            font-size: 8.5px; color: var(--text-dim-card);
+            text-align: center; line-height: 1.4;
+        }
+
+        /* ─── Flash ─── */
         .flash {
             position: fixed; inset: 0; background: white;
             z-index: 999; opacity: 0; pointer-events: none;
@@ -432,142 +1095,242 @@
         }
         .flash.active { opacity: 0.7; }
 
-        @media (min-width: 481px) { .container { padding-top: 32px; } }
+        @media (min-width: 481px) { .container { padding-top: 24px; } }
     </style>
 </head>
 <body>
     <div class="flash" id="flash"></div>
 
-    <header class="header">
-        <div class="logo">
-            <div class="logo-icon">⚡</div>
-            <div class="logo-text">Poké<span>Grader</span></div>
-        </div>
-        <div class="version-badge">BETA v0.2</div>
-    </header>
-
     <main class="container">
-        <section class="camera-section">
-            <div class="camera-wrapper" id="cameraWrapper">
-                <div class="camera-placeholder" id="cameraPlaceholder">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
-                    </svg>
-                    <p>Tap to start camera</p>
-                </div>
 
-                <video id="cameraFeed" autoplay playsinline></video>
-                <img id="capturedImage" alt="Captured card">
-                <canvas id="captureCanvas" style="display:none;"></canvas>
+        <!-- ═══ MAIN CARD — Silver Frame ═══ -->
+        <div class="card-frame">
+            <div class="card-inner">
 
-                <div class="card-guide" id="cardGuide">
-                    <div class="card-outline">
-                        <span class="card-guide-label">Align card within frame</span>
+                <!-- Header -->
+                <div class="card-header">
+                    <div>
+                        <div class="card-name-area">
+                            <div class="evolution-circle">⚡</div>
+                            <span class="stage-badge">TOOL</span>
+                            <span class="card-title">PokeGrader</span>
+                        </div>
+                        <div class="evolves-text">Powered by computer vision</div>
+                    </div>
+                    <div class="hp-area">
+                        <span class="hp-text">HP</span>
+                        <span class="hp-number">β</span>
+                        <div class="type-energy-icon">⚡</div>
                     </div>
                 </div>
 
-                <div class="corner-marks" id="cornerMarks">
-                    <div class="corner-mark tl"></div>
-                    <div class="corner-mark tr"></div>
-                    <div class="corner-mark bl"></div>
-                    <div class="corner-mark br"></div>
+                <!-- Image window -->
+                <div class="card-image-frame" id="cameraWrapper">
+                    <div class="card-image-border"></div>
+                    <div class="card-image-inner">
+                        <div class="camera-placeholder" id="cameraPlaceholder">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                            </svg>
+                            <p>Tap to start camera</p>
+                        </div>
+
+                        <video id="cameraFeed" autoplay playsinline></video>
+                        <img id="capturedImage" alt="Captured card">
+                        <canvas id="captureCanvas" style="display:none;"></canvas>
+
+                        <div class="card-guide" id="cardGuide">
+                            <div class="card-outline">
+                                <span class="card-guide-label">Align card within frame</span>
+                            </div>
+                        </div>
+
+                        <div class="corner-orb tl" id="orbTL"></div>
+                        <div class="corner-orb tr" id="orbTR"></div>
+                        <div class="corner-orb bl" id="orbBL"></div>
+                        <div class="corner-orb br" id="orbBR"></div>
+
+                        <div class="loading-overlay" id="loadingOverlay">
+                            <div class="grade-spinner"></div>
+                            <div class="loading-text">Analyzing card...</div>
+                            <div class="loading-step" id="loadingStep">Detecting card</div>
+                        </div>
+
+                        <div class="error-overlay" id="errorOverlay">
+                            <div class="error-icon">😕</div>
+                            <div class="error-msg" id="errorMsg">Could not detect a card.</div>
+                        </div>
+
+                        <div class="quality-overlay" id="qualityOverlay">
+                            <div class="quality-icon">📸</div>
+                            <div class="quality-title">Photo Quality Check</div>
+                            <div class="quality-issues" id="qualityIssues"></div>
+                            <div class="quality-actions">
+                                <button class="quality-btn quality-btn-retake" id="qualityRetake">Retake</button>
+                                <button class="quality-btn quality-btn-continue" id="qualityContinue">Grade anyway</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="loading-overlay" id="loadingOverlay">
-                    <div class="spinner"></div>
-                    <div class="loading-text">Analyzing card...</div>
-                    <div class="loading-step" id="loadingStep">Detecting card</div>
+                <!-- Description -->
+                <div class="card-description-bar">
+                    Snap a photo of any Pokémon card to receive an AI-powered condition grade analyzing centering, corners, edges, and surface quality.
                 </div>
 
-                <div class="error-overlay" id="errorOverlay">
-                    <div class="error-icon">😕</div>
-                    <div class="error-msg" id="errorMsg">Could not detect a card.</div>
+                <!-- Controls — attack style -->
+                <div class="controls-area">
+                    <!-- Attack 1: Capture -->
+                    <div class="attack-row">
+                        <div class="energy-cost">
+                            <div class="energy-orb electric"><div class="energy-orb-inner"></div></div>
+                            <div class="energy-orb electric"><div class="energy-orb-inner"></div></div>
+                        </div>
+                        <div class="attack-info">
+                            <div class="attack-name">Capture Scan</div>
+                            <div class="attack-desc">Use the camera to photograph a card for grading.</div>
+                        </div>
+                        <div class="capture-controls">
+                            <button class="btn-action hidden" id="btnFlip" title="Flip camera">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" />
+                                </svg>
+                            </button>
+                            <button class="btn-capture-shutter" id="btnCapture" disabled title="Take photo"></button>
+                            <button class="btn-action hidden" id="btnRetake" title="Retake">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Attack 2: Upload -->
+                    <div class="attack-row upload-attack" id="btnUpload">
+                        <div class="energy-cost">
+                            <div class="energy-orb colorless"><div class="energy-orb-inner"></div></div>
+                        </div>
+                        <div class="attack-info">
+                            <div class="attack-name">Gallery Upload</div>
+                            <div class="attack-desc">Choose an image from your photo library.</div>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+
+                <!-- Bottom section -->
+                <div class="card-bottom-section">
+                    <div class="rainbow-divider"></div>
+                    <div class="wrr-bar">
+                        <div class="wrr-item">
+                            <span class="wrr-label">centering</span>
+                            <div class="wrr-value">
+                                <div class="status-dot live"></div>
+                                <span class="status-text" style="color: var(--neon-green);">Live</span>
+                            </div>
+                        </div>
+                        <div class="wrr-separator"></div>
+                        <div class="wrr-item">
+                            <span class="wrr-label">corners</span>
+                            <div class="wrr-value"><div class="status-dot soon"></div><span class="status-text">Soon</span></div>
+                        </div>
+                        <div class="wrr-separator"></div>
+                        <div class="wrr-item">
+                            <span class="wrr-label">edges</span>
+                            <div class="wrr-value"><div class="status-dot soon"></div><span class="status-text">Soon</span></div>
+                        </div>
+                        <div class="wrr-separator"></div>
+                        <div class="wrr-item">
+                            <span class="wrr-label">surface</span>
+                            <div class="wrr-value"><div class="status-dot soon"></div><span class="status-text">Soon</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-flavor">
+                    The more data PokeGrader trains on, the more accurately it can predict a card's condition — growing stronger with every submission.
+                </div>
+
+                <div class="card-illus">
+                    <span>PokeGrader © 2025</span>
+                    <span>Not affiliated with PSA, BGS, CGC</span>
+                    <span>v0.2 BETA</span>
                 </div>
             </div>
+        </div>
 
-            <!-- Controls -->
-            <div class="controls">
-                <button class="btn-secondary hidden" id="btnFlip" title="Flip camera">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" />
-                    </svg>
-                </button>
 
-                <button class="btn-capture" id="btnCapture" disabled title="Take photo"></button>
+        <!-- ═══ RESULTS CARD — Blue Frame ═══ -->
+        <div class="results-card-frame" id="resultsCard">
+            <div class="results-inner">
 
-                <button class="btn-secondary hidden" id="btnRetake" title="Retake photo">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-                    </svg>
-                </button>
-            </div>
+                <div class="results-header">
+                    <div class="results-name-area">
+                        <span class="report-badge">REPORT</span>
+                        <span class="results-title">Grade Report</span>
+                    </div>
+                    <div class="grade-hp-area">
+                        <span class="grade-label-sm">GRADE</span>
+                        <span class="grade-number gem" id="gradeScore">—</span>
+                        <div class="grade-type-icon" id="gradeTypeIcon" style="background: linear-gradient(135deg, #ffd700, #ffee88);">★</div>
+                    </div>
+                </div>
 
-            <!-- Upload -->
-            <div class="upload-section">
-                <div class="upload-divider"><span>or</span></div>
-                <button class="btn-upload" id="btnUpload">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                    </svg>
-                    Upload a photo from gallery
-                </button>
-                <input type="file" id="fileInput" accept="image/*">
-            </div>
-        </section>
+                <!-- Cropped preview -->
+                <div class="results-image-frame" id="croppedPreview">
+                    <div class="results-image-border"></div>
+                    <div class="detected-label">
+                        <div class="dot-pulse"></div>
+                        Detected
+                    </div>
+                    <img id="croppedCardImg" alt="Cropped card">
+                </div>
 
-        <!-- Cropped Card Preview -->
-        <section class="cropped-preview" id="croppedPreview">
-            <div class="cropped-label"><div class="dot"></div> Card Detected</div>
-            <img id="croppedCardImg" alt="Cropped card">
-        </section>
+                <div class="grade-desc-banner gem" id="gradeDescription"></div>
 
-        <!-- Results -->
-        <section class="results-panel" id="resultsPanel">
-            <div class="grade-card">
-                <div class="grade-header-label">Centering Grade</div>
-                <div class="grade-note">Based on centering analysis only</div>
-                <div class="grade-score" id="gradeScore">—</div>
-                <div class="grade-description" id="gradeDescription"></div>
-
-                <div class="factors-section">
-                    <div class="factor-section-label">Factor Breakdown</div>
-                    <div class="grade-factors">
-                        <div class="factor-row">
-                            <span class="factor-name">Centering</span>
-                            <div class="factor-bar-track">
+                <!-- Factor attacks -->
+                <div class="factor-attacks">
+                    <div class="factor-attack">
+                        <div class="factor-energy-orb centering"></div>
+                        <div class="factor-info">
+                            <div class="factor-attack-name">Centering</div>
+                            <div class="factor-bar">
                                 <div class="factor-bar-fill" id="barCentering"></div>
                             </div>
-                            <span class="factor-value" id="valCentering">—</span>
                         </div>
-                        <div class="factor-row">
-                            <span class="factor-name">Corners</span>
-                            <div class="factor-bar-track">
-                                <div class="factor-bar-fill disabled" id="barCorners" style="width:100%"></div>
-                            </div>
-                            <span class="factor-value coming-soon">Soon</span>
+                        <div class="factor-dmg" id="valCentering">—</div>
+                    </div>
+                    <div class="factor-attack">
+                        <div class="factor-energy-orb corners"></div>
+                        <div class="factor-info">
+                            <div class="factor-attack-name">Corners</div>
+                            <div class="factor-bar"><div class="factor-bar-fill disabled"></div></div>
                         </div>
-                        <div class="factor-row">
-                            <span class="factor-name">Edges</span>
-                            <div class="factor-bar-track">
-                                <div class="factor-bar-fill disabled" id="barEdges" style="width:100%"></div>
-                            </div>
-                            <span class="factor-value coming-soon">Soon</span>
+                        <div class="factor-dmg soon">SOON</div>
+                    </div>
+                    <div class="factor-attack">
+                        <div class="factor-energy-orb edges"></div>
+                        <div class="factor-info">
+                            <div class="factor-attack-name">Edges</div>
+                            <div class="factor-bar"><div class="factor-bar-fill disabled"></div></div>
                         </div>
-                        <div class="factor-row">
-                            <span class="factor-name">Surface</span>
-                            <div class="factor-bar-track">
-                                <div class="factor-bar-fill disabled" id="barSurface" style="width:100%"></div>
-                            </div>
-                            <span class="factor-value coming-soon">Soon</span>
+                        <div class="factor-dmg soon">SOON</div>
+                    </div>
+                    <div class="factor-attack">
+                        <div class="factor-energy-orb surface"></div>
+                        <div class="factor-info">
+                            <div class="factor-attack-name">Surface</div>
+                            <div class="factor-bar"><div class="factor-bar-fill disabled"></div></div>
                         </div>
+                        <div class="factor-dmg soon">SOON</div>
                     </div>
                 </div>
 
-                <!-- Centering Details -->
-                <div class="centering-detail" id="centeringDetail">
-                    <div class="centering-detail-title">Centering Analysis</div>
-                    <div class="centering-ratios">
+                <!-- Centering detail -->
+                <div class="centering-flavor" id="centeringDetail">
+                    <div class="centering-flavor-title">◆ Centering Analysis</div>
+                    <div class="ratio-grid">
                         <div class="ratio-item">
                             <span class="ratio-label">Left / Right</span>
                             <span class="ratio-value" id="lrRatio">—</span>
@@ -577,28 +1340,43 @@
                             <span class="ratio-value" id="tbRatio">—</span>
                         </div>
                     </div>
-                    <div class="centering-desc" id="centeringDesc"></div>
+                    <div class="centering-desc-text" id="centeringDesc"></div>
                 </div>
 
-                <div class="info-note">
-                    <strong>ℹ️ Beta:</strong> Currently analyzing centering only. Corners, edges, and surface grading require a trained ML model — coming soon. Place your card on a dark, contrasting background for best results.
+                <div class="results-rainbow-divider"></div>
+                <div class="results-bottom-bar">
+                    <div class="result-meta">
+                        <span class="result-meta-label">source</span>
+                        <span class="result-meta-value" id="gradeSource">centering only</span>
+                    </div>
+                    <div class="result-meta">
+                        <span class="result-meta-label">method</span>
+                        <span class="result-meta-value">algorithmic</span>
+                    </div>
+                    <div class="result-meta">
+                        <span class="result-meta-label">model</span>
+                        <span class="result-meta-value" id="modelStatus">training</span>
+                    </div>
+                </div>
+
+                <div class="results-note">
+                    ⚡ Beta — centering analysis only. Full AI grading coming soon. Dark background recommended.
                 </div>
             </div>
-        </section>
+        </div>
+
     </main>
 
     <script>
-        // ─── STATE ───
         const state = { stream: null, facingMode: 'environment', captured: false };
 
-        // ─── ELEMENTS ───
         const el = {
             video: document.getElementById('cameraFeed'),
             capturedImg: document.getElementById('capturedImage'),
             canvas: document.getElementById('captureCanvas'),
             placeholder: document.getElementById('cameraPlaceholder'),
             cardGuide: document.getElementById('cardGuide'),
-            cornerMarks: document.getElementById('cornerMarks'),
+            cornerOrbs: ['orbTL', 'orbTR', 'orbBL', 'orbBR'].map(id => document.getElementById(id)),
             loading: document.getElementById('loadingOverlay'),
             loadingStep: document.getElementById('loadingStep'),
             errorOverlay: document.getElementById('errorOverlay'),
@@ -609,7 +1387,7 @@
             btnRetake: document.getElementById('btnRetake'),
             btnUpload: document.getElementById('btnUpload'),
             fileInput: document.getElementById('fileInput'),
-            results: document.getElementById('resultsPanel'),
+            resultsCard: document.getElementById('resultsCard'),
             croppedPreview: document.getElementById('croppedPreview'),
             croppedCardImg: document.getElementById('croppedCardImg'),
             gradeScore: document.getElementById('gradeScore'),
@@ -617,28 +1395,294 @@
             lrRatio: document.getElementById('lrRatio'),
             tbRatio: document.getElementById('tbRatio'),
             centeringDesc: document.getElementById('centeringDesc'),
+            qualityOverlay: document.getElementById('qualityOverlay'),
+            qualityIssues: document.getElementById('qualityIssues'),
+            qualityRetake: document.getElementById('qualityRetake'),
+            qualityContinue: document.getElementById('qualityContinue'),
         };
 
-        // ─── CAMERA ───
+        // ═══════════════════════════════════════
+        // IMAGE QUALITY CHECKS — all client-side
+        // ═══════════════════════════════════════
+
+        function getImageData(canvas) {
+            const ctx = canvas.getContext('2d');
+            return ctx.getImageData(0, 0, canvas.width, canvas.height);
+        }
+
+        function toGrayscale(imageData) {
+            const d = imageData.data;
+            const gray = new Float32Array(imageData.width * imageData.height);
+            for (let i = 0; i < gray.length; i++) {
+                const j = i * 4;
+                gray[i] = 0.299 * d[j] + 0.587 * d[j+1] + 0.114 * d[j+2];
+            }
+            return { data: gray, width: imageData.width, height: imageData.height };
+        }
+
+        /**
+         * Blur detection via Laplacian variance.
+         * Approximates the Laplacian (second derivative) with a 3x3 kernel
+         * and measures the variance of the output. Low variance = blurry.
+         */
+        function checkBlur(gray) {
+            const { data, width, height } = gray;
+            let sum = 0, sumSq = 0, count = 0;
+
+            // Sample the center 60% to focus on where the card likely is
+            const x0 = Math.floor(width * 0.2);
+            const x1 = Math.floor(width * 0.8);
+            const y0 = Math.floor(height * 0.2);
+            const y1 = Math.floor(height * 0.8);
+
+            // Step by 2 for speed — we don't need every pixel
+            for (let y = y0 + 1; y < y1 - 1; y += 2) {
+                for (let x = x0 + 1; x < x1 - 1; x += 2) {
+                    const idx = y * width + x;
+                    // Laplacian kernel: 0 1 0 / 1 -4 1 / 0 1 0
+                    const lap = (
+                        data[idx - width] +
+                        data[idx - 1] +
+                        data[idx + 1] +
+                        data[idx + width] -
+                        4 * data[idx]
+                    );
+                    sum += lap;
+                    sumSq += lap * lap;
+                    count++;
+                }
+            }
+
+            const mean = sum / count;
+            const variance = (sumSq / count) - (mean * mean);
+
+            // Thresholds tuned for phone cameras:
+            // < 100 = very blurry, 100-300 = slightly soft, > 300 = sharp
+            const BLUR_SEVERE = 80;
+            const BLUR_WARN = 200;
+
+            if (variance < BLUR_SEVERE) {
+                return { pass: false, severe: true, variance,
+                    msg: 'Image is very blurry',
+                    tip: 'Hold your phone steady and tap to focus on the card. Rest your elbows on the table.' };
+            }
+            if (variance < BLUR_WARN) {
+                return { pass: false, severe: false, variance,
+                    msg: 'Image is slightly soft',
+                    tip: 'Try holding steadier or ensure autofocus has locked on. Tap the card area to focus.' };
+            }
+            return { pass: true, variance };
+        }
+
+        /**
+         * Brightness / exposure check.
+         * Looks at the mean and distribution of luminance values.
+         */
+        function checkExposure(gray) {
+            const { data } = gray;
+            const len = data.length;
+
+            // Sample every 4th pixel for speed
+            let sum = 0, count = 0;
+            let darkPx = 0, brightPx = 0;
+
+            for (let i = 0; i < len; i += 4) {
+                const v = data[i];
+                sum += v;
+                count++;
+                if (v < 30) darkPx++;
+                if (v > 240) brightPx++;
+            }
+
+            const mean = sum / count;
+            const darkRatio = darkPx / count;
+            const brightRatio = brightPx / count;
+
+            if (mean < 50) {
+                return { pass: false, severe: true, mean,
+                    msg: 'Image is too dark',
+                    tip: 'Move to a better-lit area. Overhead lighting or a desk lamp pointed at the card works well.' };
+            }
+            if (mean < 75) {
+                return { pass: false, severe: false, mean,
+                    msg: 'Image is a bit dark',
+                    tip: 'A bit more light would help. Try tilting toward a light source.' };
+            }
+            if (mean > 220) {
+                return { pass: false, severe: true, mean,
+                    msg: 'Image is overexposed',
+                    tip: 'Too much direct light is washing out the card. Move away from the light source or use diffused lighting.' };
+            }
+            if (brightRatio > 0.25) {
+                return { pass: false, severe: false, mean,
+                    msg: 'Image is a bit bright',
+                    tip: 'Some areas are blown out. Try slightly less direct light.' };
+            }
+            return { pass: true, mean };
+        }
+
+        /**
+         * Glare / hot-spot detection.
+         * Looks for concentrated clusters of near-white pixels,
+         * which indicate specular reflection (common on holo cards).
+         */
+        function checkGlare(imageData) {
+            const d = imageData.data;
+            const w = imageData.width;
+            const h = imageData.height;
+
+            // Focus on center 70% where the card art is
+            const x0 = Math.floor(w * 0.15);
+            const x1 = Math.floor(w * 0.85);
+            const y0 = Math.floor(h * 0.15);
+            const y1 = Math.floor(h * 0.85);
+
+            // Divide into a grid and count hot pixels per cell
+            const gridCols = 8, gridRows = 6;
+            const cellW = (x1 - x0) / gridCols;
+            const cellH = (y1 - y0) / gridRows;
+            const cellCounts = new Float32Array(gridCols * gridRows);
+            const cellTotals = new Float32Array(gridCols * gridRows);
+
+            const HOT_THRESHOLD = 245; // Near-white across all channels
+
+            for (let y = y0; y < y1; y += 2) {
+                for (let x = x0; x < x1; x += 2) {
+                    const i = (y * w + x) * 4;
+                    const r = d[i], g = d[i+1], b = d[i+2];
+                    const col = Math.min(Math.floor((x - x0) / cellW), gridCols - 1);
+                    const row = Math.min(Math.floor((y - y0) / cellH), gridRows - 1);
+                    const ci = row * gridCols + col;
+                    cellTotals[ci]++;
+
+                    if (r > HOT_THRESHOLD && g > HOT_THRESHOLD && b > HOT_THRESHOLD) {
+                        cellCounts[ci]++;
+                    }
+                }
+            }
+
+            // Check for any cell with >30% hot pixels = concentrated glare
+            let maxCellRatio = 0;
+            let hotCells = 0;
+            for (let i = 0; i < cellCounts.length; i++) {
+                if (cellTotals[i] === 0) continue;
+                const ratio = cellCounts[i] / cellTotals[i];
+                if (ratio > maxCellRatio) maxCellRatio = ratio;
+                if (ratio > 0.3) hotCells++;
+            }
+
+            // Also check overall hot pixel ratio
+            let totalHot = 0, totalPx = 0;
+            for (let i = 0; i < cellCounts.length; i++) {
+                totalHot += cellCounts[i];
+                totalPx += cellTotals[i];
+            }
+            const overallHotRatio = totalPx > 0 ? totalHot / totalPx : 0;
+
+            if (hotCells >= 3 || maxCellRatio > 0.6) {
+                return { pass: false, severe: true, maxCellRatio, hotCells,
+                    msg: 'Significant glare detected',
+                    tip: 'Holo reflection is washing out card details. Tilt the card ~15° or move your light source to the side.' };
+            }
+            if (hotCells >= 1 || overallHotRatio > 0.08) {
+                return { pass: false, severe: false, maxCellRatio, hotCells,
+                    msg: 'Some glare spots visible',
+                    tip: 'Minor glare may affect surface grading. Try angling the card slightly away from the light.' };
+            }
+            return { pass: true, maxCellRatio, hotCells };
+        }
+
+        /**
+         * Run all quality checks on the capture canvas.
+         * Returns { pass: bool, issues: [] }
+         */
+        function runQualityChecks(canvas) {
+            const t0 = performance.now();
+
+            // Downscale for speed — we don't need full res for quality checks
+            const checkSize = 480;
+            const scale = Math.min(checkSize / canvas.width, checkSize / canvas.height, 1);
+            const cw = Math.round(canvas.width * scale);
+            const ch = Math.round(canvas.height * scale);
+
+            const checkCanvas = document.createElement('canvas');
+            checkCanvas.width = cw;
+            checkCanvas.height = ch;
+            const ctx = checkCanvas.getContext('2d');
+            ctx.drawImage(canvas, 0, 0, cw, ch);
+
+            const imageData = ctx.getImageData(0, 0, cw, ch);
+            const gray = toGrayscale(imageData);
+
+            const blur = checkBlur(gray);
+            const exposure = checkExposure(gray);
+            const glare = checkGlare(imageData);
+
+            const issues = [];
+            if (!blur.pass) issues.push(blur);
+            if (!exposure.pass) issues.push(exposure);
+            if (!glare.pass) issues.push(glare);
+
+            const elapsed = Math.round(performance.now() - t0);
+            console.log(`Quality check: ${elapsed}ms | blur=${blur.variance?.toFixed(0)} exposure=${exposure.mean?.toFixed(0)} glare_cells=${glare.hotCells}`);
+
+            return {
+                pass: issues.length === 0,
+                hasSevere: issues.some(i => i.severe),
+                issues,
+                elapsed,
+            };
+        }
+
+        /**
+         * Show quality warnings in the overlay.
+         * Returns a promise that resolves to 'retake' or 'continue'.
+         */
+        function showQualityWarnings(result) {
+            return new Promise((resolve) => {
+                el.qualityIssues.innerHTML = result.issues.map(issue => `
+                    <div class="quality-issue ${issue.severe ? 'severe' : ''}">
+                        <span class="quality-issue-icon">${issue.severe ? '🔴' : '🟡'}</span>
+                        <div class="quality-issue-text">
+                            <strong>${issue.msg}</strong><br>
+                            ${issue.tip}
+                        </div>
+                    </div>
+                `).join('');
+
+                el.qualityOverlay.classList.add('visible');
+
+                const onRetake = () => { cleanup(); resolve('retake'); };
+                const onContinue = () => { cleanup(); resolve('continue'); };
+
+                function cleanup() {
+                    el.qualityRetake.removeEventListener('click', onRetake);
+                    el.qualityContinue.removeEventListener('click', onContinue);
+                    el.qualityOverlay.classList.remove('visible');
+                }
+
+                el.qualityRetake.addEventListener('click', onRetake);
+                el.qualityContinue.addEventListener('click', onContinue);
+            });
+        }
+
         async function startCamera() {
             try {
                 if (state.stream) state.stream.getTracks().forEach(t => t.stop());
-
                 state.stream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: state.facingMode, width: { ideal: 1920 }, height: { ideal: 2560 } },
                     audio: false,
                 });
-
                 el.video.srcObject = state.stream;
                 el.video.style.display = 'block';
                 el.placeholder.classList.add('hidden');
                 el.cardGuide.classList.add('visible');
-                el.cornerMarks.classList.add('visible');
+                el.cornerOrbs.forEach(e => e.classList.add('visible'));
                 el.btnCapture.disabled = false;
                 el.btnFlip.classList.remove('hidden');
             } catch (err) {
                 console.error('Camera error:', err);
-                el.placeholder.querySelector('p').textContent = 'Camera unavailable — upload a photo instead';
+                el.placeholder.querySelector('p').textContent = 'Camera unavailable — upload a photo';
             }
         }
 
@@ -647,37 +1691,45 @@
             startCamera();
         }
 
-        // ─── CAPTURE ───
         function capturePhoto() {
             if (!state.stream || state.captured) return;
-
             el.flash.classList.add('active');
             setTimeout(() => el.flash.classList.remove('active'), 150);
-
             const track = state.stream.getVideoTracks()[0];
             const settings = track.getSettings();
             el.canvas.width = settings.width || el.video.videoWidth;
             el.canvas.height = settings.height || el.video.videoHeight;
-
-            const ctx = el.canvas.getContext('2d');
-            ctx.drawImage(el.video, 0, 0, el.canvas.width, el.canvas.height);
-
-            const dataUrl = el.canvas.toDataURL('image/jpeg', 0.92);
-            showCaptured(dataUrl);
+            el.canvas.getContext('2d').drawImage(el.video, 0, 0, el.canvas.width, el.canvas.height);
+            showCaptured(el.canvas.toDataURL('image/jpeg', 0.92));
         }
 
         function showCaptured(dataUrl) {
             state.captured = true;
             if (state.stream) state.stream.getTracks().forEach(t => t.stop());
-
             el.video.style.display = 'none';
             el.capturedImg.src = dataUrl;
             el.capturedImg.style.display = 'block';
             el.cardGuide.classList.remove('visible');
-            el.cornerMarks.classList.remove('visible');
+            el.cornerOrbs.forEach(e => e.classList.remove('visible'));
             el.btnCapture.disabled = true;
             el.btnFlip.classList.add('hidden');
             el.btnRetake.classList.remove('hidden');
+
+            // Run quality checks on the canvas before sending to API
+            runQualityGate(dataUrl);
+        }
+
+        async function runQualityGate(dataUrl) {
+            const quality = runQualityChecks(el.canvas);
+
+            if (!quality.pass) {
+                const decision = await showQualityWarnings(quality);
+                if (decision === 'retake') {
+                    retake();
+                    return;
+                }
+                // User chose "grade anyway" — proceed
+            }
 
             analyzeCard(dataUrl);
         }
@@ -686,63 +1738,57 @@
             state.captured = false;
             el.capturedImg.style.display = 'none';
             el.capturedImg.src = '';
-            el.results.classList.remove('visible');
+            el.resultsCard.classList.remove('visible');
             el.croppedPreview.classList.remove('visible');
             el.errorOverlay.classList.remove('visible');
+            el.qualityOverlay.classList.remove('visible');
             el.btnRetake.classList.add('hidden');
             startCamera();
         }
 
-        // ─── FILE UPLOAD ───
         function handleFileUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
-            reader.onload = (evt) => showCaptured(evt.target.result);
+            reader.onload = (evt) => {
+                // Draw the uploaded image onto the canvas for quality checks
+                const img = new Image();
+                img.onload = () => {
+                    el.canvas.width = img.width;
+                    el.canvas.height = img.height;
+                    el.canvas.getContext('2d').drawImage(img, 0, 0);
+                    showCaptured(evt.target.result);
+                };
+                img.src = evt.target.result;
+            };
             reader.readAsDataURL(file);
             e.target.value = '';
         }
 
-        // ─── ANALYZE (REAL API CALL) ───
         async function analyzeCard(dataUrl) {
             el.loading.classList.add('visible');
             el.loadingStep.textContent = 'Detecting card...';
-
             try {
-                // Convert data URL to blob for upload
                 const blob = await fetch(dataUrl).then(r => r.blob());
                 const formData = new FormData();
                 formData.append('file', blob, 'card.jpg');
-
                 el.loadingStep.textContent = 'Analyzing centering...';
-
-                const response = await fetch('/api/grade', {
-                    method: 'POST',
-                    body: formData,
-                });
-
+                const response = await fetch('/api/grade', { method: 'POST', body: formData });
                 const result = await response.json();
                 el.loading.classList.remove('visible');
-
                 if (!result.success) {
                     showError(result.message || 'Could not detect a card in the image.');
                     return;
                 }
-
-                // Show cropped card
                 if (result.images && result.images.cropped_card) {
                     el.croppedCardImg.src = 'data:image/jpeg;base64,' + result.images.cropped_card;
                     el.croppedPreview.classList.add('visible');
                 }
-
-                // Show results
                 showResults(result);
-
             } catch (err) {
                 el.loading.classList.remove('visible');
                 console.error('API error:', err);
-                showError('Could not connect to the grading server. Make sure the FastAPI server is running.');
+                showError('Could not connect to the grading server. Make sure FastAPI is running.');
             }
         }
 
@@ -754,45 +1800,52 @@
         function showResults(result) {
             const grade = result.grade.value;
             const centering = result.centering;
-
-            // Grade descriptions
             const labels = {
-                10: 'Gem Mint', 9: 'Mint', 8: 'Near Mint–Mint', 7: 'Near Mint',
-                6: 'Excellent–Mint', 5: 'Excellent', 4: 'Very Good–Excellent',
-                3: 'Very Good', 2: 'Good', 1: 'Poor'
+                10: 'GEM MINT', 9: 'MINT', 8: 'NM–MT', 7: 'NEAR MINT',
+                6: 'EX–MT', 5: 'EXCELLENT', 4: 'VG–EX',
+                3: 'VERY GOOD', 2: 'GOOD', 1: 'POOR'
             };
 
-            el.gradeScore.textContent = grade;
-            el.gradeDesc.textContent = labels[grade] || '';
-            el.results.classList.add('visible');
+            const tier = grade >= 9 ? 'gem' : grade >= 7 ? 'high' : grade >= 5 ? 'mid' : 'low';
 
-            // Centering bar
+            el.gradeScore.textContent = grade;
+            el.gradeScore.className = 'grade-number ' + tier;
+            el.gradeDesc.textContent = labels[grade] || '';
+            el.gradeDesc.className = 'grade-desc-banner ' + tier;
+
+            // Update type icon color based on grade
+            const iconEl = document.getElementById('gradeTypeIcon');
+            const iconColors = { gem: '#ffd700, #ffee88', high: '#44e86c, #80ffaa', mid: '#ff8a4d, #ffcc66', low: '#ff4d6a, #ff8888' };
+            iconEl.style.background = `linear-gradient(135deg, ${iconColors[tier]})`;
+
+            el.resultsCard.classList.add('visible');
+
             setTimeout(() => {
                 const pct = Math.round(centering.score * 100);
                 const bar = document.getElementById('barCentering');
                 bar.style.width = pct + '%';
                 bar.className = 'factor-bar-fill ' + (pct >= 80 ? 'high' : pct >= 60 ? 'mid' : 'low');
                 document.getElementById('valCentering').textContent = (centering.score * 10).toFixed(1);
-            }, 100);
+            }, 200);
 
-            // Centering details
             el.lrRatio.textContent = centering.left_right_ratio;
             el.tbRatio.textContent = centering.top_bottom_ratio;
             el.centeringDesc.textContent = centering.details;
+
+            setTimeout(() => {
+                el.resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 350);
         }
 
-        // ─── EVENTS ───
         el.placeholder.addEventListener('click', startCamera);
         el.btnCapture.addEventListener('click', capturePhoto);
         el.btnFlip.addEventListener('click', flipCamera);
         el.btnRetake.addEventListener('click', retake);
         el.btnUpload.addEventListener('click', () => el.fileInput.click());
         el.fileInput.addEventListener('change', handleFileUpload);
-
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space' && !state.captured && !el.btnCapture.disabled) {
-                e.preventDefault();
-                capturePhoto();
+                e.preventDefault(); capturePhoto();
             }
         });
     </script>
