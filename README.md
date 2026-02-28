@@ -2,22 +2,33 @@
 
 AI-powered Pokémon card condition grading from a phone camera photo. Estimates PSA 1–10 grades by analyzing centering, corners, edges, and surface quality.
 
-> **Status:** Working prototype — card detection and centering analysis are live. Multimodal grading pipeline in development.
+> **Status:** Live beta — card detection, centering analysis, and initial AI grading model deployed. Model retraining with balanced dataset in progress.
+
+## 🔴 Try It Now
+
+**[Launch PokéGrader Beta →](https://huggingface.co/spaces/kevwill/pokegrader)**
+
+Open on your phone, snap a photo of any Pokémon card, and get an instant centering analysis with PSA-standard ratios. Works on any mobile browser — no app install needed.
+
+<p align="center">
+  <img src="docs/screenshot-beta.png" alt="PokéGrader Beta Screenshot" width="700"/>
+</p>
 
 ## How It Works
 
 Snap a photo of a card with your phone → the app detects the card, crops it, and predicts a PSA-style grade based on the same factors professional graders evaluate.
 
-**What's working now:**
+**What's live now:**
 - Card detection and perspective correction from any background
 - Real centering analysis with PSA-standard ratios (e.g., 55/45 left/right)
+- Initial AI grading model (EfficientNet-B0 + metadata fusion, 72% accuracy within 1 grade)
 - Mobile-first camera UI with photo quality validation (blur, exposure, glare detection)
-- Training data collection pipeline (~1,200+ labeled cards from TAG Grading)
+- Deployed on Hugging Face Spaces — accessible from any phone
 
 **What's next:**
-- Multimodal grading pipeline (vision encoder → agent → composite grade)
+- Retraining with balanced dataset (~530 additional low-grade cards targeting grades 4 and 7)
 - Defect and ding detection from full card images
-- Composite grade prediction with per-factor breakdowns and confidence scores
+- Per-factor breakdowns (corners, edges, surface) with confidence scores
 
 ## Architecture: Multimodal Grading Pipeline
 
@@ -26,31 +37,31 @@ PokéGrader uses a multimodal pipeline that mirrors how a human grader evaluates
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     QUERY (Input)                       │
-│  Raw photo → card detection → crop & perspective fix    │
+│  Raw photo → quality gate → card detection → crop       │
 └─────────────────────┬───────────────────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────────────────┐
 │                   ENCODER (Features)                    │
-│  Pretrained vision encoder (ViT / CLIP) produces rich   │
-│  feature embeddings from the cropped card image         │
+│  EfficientNet-B0 backbone produces 1280-dim visual      │
+│  features from the cropped card image                   │
 └─────────────────────┬───────────────────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────────────────┐
-│                   AGENT (Reasoning)                     │
-│  Orchestrates specialized analyses:                     │
+│              FUSION (Visual + Structured)                │
 │                                                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │  Centering   │  │   Defect /   │  │   Surface    │  │
-│  │ (algorithmic)│  │ Ding Detect  │  │  Condition   │  │
+│  │  Centering   │  │   Defect     │  │   Metadata   │  │
+│  │ (algorithmic)│  │   Counts     │  │   Features   │  │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │
 │         │                 │                 │           │
-│  Fuses visual features + algorithmic results + metadata │
-│  (defect counts, centering ratios, wear indicators)     │
+│  Visual features (1280) + aux features (11) → MLP head  │
+│  → combined [1312-dim] → FC layers → grade prediction   │
 └─────────────────────┬───────────────────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────────────────┐
 │                   OUTPUT (Grade)                        │
-│  PSA 1–10 grade + per-factor breakdown + confidence     │
+│  Continuous grade (1.0–10.0) → rounded PSA grade        │
+│  + confidence score + centering breakdown               │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -58,17 +69,20 @@ PokéGrader uses a multimodal pipeline that mirrors how a human grader evaluates
 
 Early data analysis revealed that TAG Grading's per-feature sub-scores (Fray, Fill, Angle for each corner and edge) have virtually no variance across grade levels — a grade 1 card and a grade 10 card both score 994–1000 on corners and edges. This made the original plan of training separate CNN sub-models per grading factor unviable.
 
-What *does* carry strong signal: the overall TAG score (0–1000), defect counts and types, centering measurements, and the visual appearance of the full card image. The multimodal pipeline exploits all of these by combining a powerful vision encoder with structured data fusion, rather than asking a single model to learn everything from pixels alone.
+What *does* carry strong signal: the overall TAG score (0–1000), defect counts and types, centering measurements, and the visual appearance of the full card image. The multimodal pipeline exploits all of these by combining a vision backbone with structured data fusion, rather than asking a single model to learn everything from pixels alone.
 
-### Pipeline Stages
+### Initial Model Performance
 
-**Query (Preprocessing)** — The raw phone photo is validated for quality (blur, exposure, glare), then the card is detected, perspective-corrected, and cropped. This gate ensures only usable images reach the model.
+The v1 model (EfficientNet-B0 + 11-dim auxiliary features, trained for 27 epochs on ~1,200 cards):
 
-**Encoder (Feature Extraction)** — A pretrained vision encoder (ViT or CLIP) produces dense feature embeddings from the cropped card. Using a frozen pretrained encoder lets us leverage representations trained on millions of images without needing a massive card-specific dataset.
+| Metric | Value |
+|--------|-------|
+| Mean Absolute Error | 0.94 grades |
+| Within 1 grade | 71.7% |
+| Within 0.5 grade | 46.6% |
+| Exact grade match | 39.3% |
 
-**Agent (Analysis & Fusion)** — The orchestration layer routes encoded features through specialized checks: algorithmic centering analysis (already working), defect/ding detection, and overall condition assessment. It then fuses visual features with structured metadata (defect counts, centering ratios) through a learned fusion head to produce the final grade. This mirrors a human grader's process of evaluating multiple factors and synthesizing a judgment.
-
-**Output** — A composite PSA-style grade (1–10) with per-factor breakdowns, confidence scores, and interpretable reasoning about what drove the grade.
+The primary limitation is class imbalance — the training set skews heavily toward grades 8–10. Retraining with a balanced dataset is the next priority.
 
 ## Training Strategy
 
@@ -123,12 +137,18 @@ This finding drove the architectural pivot from separate per-factor CNNs to the 
 - **Backend:** Python, FastAPI, OpenCV, PyTorch
 - **Frontend:** HTML/JS with browser Camera API (mobile-first)
 - **CV Pipeline:** Card detection, perspective correction, border analysis, photo quality validation
-- **Vision Encoder:** Pretrained ViT/CLIP (frozen) for feature extraction
-- **Fusion Head:** Lightweight MLP combining visual features + structured metadata
+- **Model:** EfficientNet-B0 backbone + auxiliary feature MLP (11-dim metadata fusion)
 - **Centering:** Algorithmic (OpenCV border analysis) — no model needed
 - **Augmentation:** Phone camera simulation (blur, lighting, rotation, JPEG artifacts, noise)
+- **Deployment:** Docker on Hugging Face Spaces
 
 ## Quick Start
+
+### Try the live beta
+
+**[huggingface.co/spaces/kevwill/pokegrader](https://huggingface.co/spaces/kevwill/pokegrader)**
+
+### Run locally
 
 ```bash
 # Install dependencies
@@ -148,8 +168,10 @@ pokegrader/
 │   ├── api/
 │   │   └── app.py              # FastAPI server
 │   ├── model/
-│   │   ├── grader.py           # Vision encoder + fusion head
-│   │   └── train.py            # Training loop
+│   │   ├── grader.py           # EfficientNet-B0 + aux feature fusion model
+│   │   ├── sub_model.py        # Corner/edge sub-score models (experimental)
+│   │   ├── train.py            # Training loop (eBay data)
+│   │   └── train_tag.py        # Training loop (TAG data)
 │   └── utils/
 │       ├── card_detector.py    # Card detection & perspective correction
 │       ├── centering.py        # Centering analysis (algorithmic)
@@ -162,10 +184,11 @@ pokegrader/
 ├── data/
 │   ├── raw/                    # Scraped training images
 │   ├── processed/              # Cropped & organized
-│   └── augmented/              # Augmented training sets
+│   ├── augmented/              # Augmented training sets
+│   └── models/                 # Trained model checkpoints
 ├── web/
-│   ├── static/
 │   └── templates/
+│       └── index.html          # Mobile-first camera UI
 └── tests/
 ```
 
@@ -173,13 +196,13 @@ pokegrader/
 
 | Factor | Method | Signal Source | Status |
 |--------|--------|--------------|--------|
-| Centering | Algorithmic (OpenCV border analysis) | TAG centering measurements | ✅ Working |
-| Corners | Vision encoder + fusion head | Full card images + defect metadata | 🔄 Training |
-| Edges | Vision encoder + fusion head | Full card images + defect metadata | 🔄 Training |
-| Surface | Vision encoder + fusion head | Full card images + defect annotations | 🔄 Training |
-| **Composite** | **Agent fusion (visual + structured)** | **All factors combined** | **🔄 Training** |
+| Centering | Algorithmic (OpenCV border analysis) | TAG centering measurements | ✅ Live |
+| Overall Grade | EfficientNet-B0 + metadata fusion | Full card images + TAG scores + defect counts | ✅ Beta |
+| Corners | Vision encoder (planned) | Full card images + defect metadata | 🔄 Next |
+| Edges | Vision encoder (planned) | Full card images + defect metadata | 🔄 Next |
+| Surface | Vision encoder (planned) | Full card images + defect annotations | 🔄 Next |
 
-> **Note:** Corners, edges, and surface are evaluated holistically by the vision encoder rather than through separate per-factor models, since TAG's per-feature sub-scores lack the variance needed for independent training.
+> **Note:** The initial model predicts a holistic grade from the full card image + structured metadata rather than scoring individual factors separately, since TAG's per-feature sub-scores lack the variance needed for independent training.
 
 ## Disclaimer
 
