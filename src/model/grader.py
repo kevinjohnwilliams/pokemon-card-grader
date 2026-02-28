@@ -1,143 +1,220 @@
 """
-PokéGrader — Card Condition Grading Model
+PokéGrader — Card Grading Model (v2 — Regression with Auxiliary Features)
 
-Fine-tuned EfficientNet-B0 that predicts PSA grades (1-10) from card images.
+Single EfficientNet-B0 model that predicts a continuous grade (1.0-10.0)
+from the full card image, augmented with structured metadata features
+(defect counts, centering offsets, defect type flags).
 
 Architecture:
-    EfficientNet-B0 backbone (pretrained on ImageNet)
-    → Global average pooling
-    → Dropout
-    → FC head → 10 classes (PSA 1-10)
+    Image → EfficientNet-B0 → 1280-dim features
+    Aux features (11-dim) → small MLP → 32-dim
+    Concatenate → [1312-dim] → FC layers → single output (1.0-10.0)
 
-The model predicts a grade distribution (softmax over 10 grades), which
-gives us both a predicted grade and a confidence score. We use ordinal-aware
-training so the model understands that predicting 8 when the answer is 9
-is better than predicting 3.
+The model learns visual condition from pixels AND leverages the structured
+defect/centering data that's already in the metadata. This hybrid approach
+outperforms either signal alone.
 
 Usage:
-    from src.model.grader import CardGraderModel
+    from src.model.grader import CardGrader
 
-    model = CardGraderModel()
-    output = model(image_tensor)   # (batch, 10) logits
-    grade = output.argmax(dim=1) + 1  # +1 because grades are 1-10, indices are 0-9
+    model = CardGrader(pretrained=True)
+    grade = model.predict(image_tensor, aux_tensor)  # Returns e.g. 8.7
 """
 
 import torch
 import torch.nn as nn
-import torchvision.models as models
+from torchvision import models
 
 
-class CardGraderModel(nn.Module):
+class CardGrader(nn.Module):
     """
-    EfficientNet-B0 fine-tuned for PSA grade prediction.
+    Hybrid image + metadata model for card grade prediction.
 
-    Input:  (B, 3, 224, 224) normalized card image
-    Output: (B, 10) logits for PSA grades 1-10
+    Combines EfficientNet-B0 visual features with structured auxiliary
+    features (defect counts, centering offsets) to predict a continuous
+    grade from 1.0 to 10.0.
+
+    Args:
+        num_aux_features: Number of auxiliary metadata features (default: 11)
+        pretrained: Use ImageNet pretrained backbone
+        dropout: Dropout rate for regularization
     """
 
     def __init__(
         self,
-        num_grades: int = 10,
-        dropout: float = 0.3,
+        num_aux_features: int = 11,
         pretrained: bool = True,
+        dropout: float = 0.3,
     ):
         super().__init__()
 
-        # Load pretrained EfficientNet-B0
+        # ---- Image branch: EfficientNet-B0 ----
         weights = models.EfficientNet_B0_Weights.DEFAULT if pretrained else None
         backbone = models.efficientnet_b0(weights=weights)
-
-        # Everything except the final classifier
         self.features = backbone.features
         self.pool = nn.AdaptiveAvgPool2d(1)
+        img_dim = 1280  # EfficientNet-B0 output dimension
 
-        # EfficientNet-B0 outputs 1280 features
-        in_features = 1280
-
-        # Grading head
-        self.classifier = nn.Sequential(
-            nn.Dropout(p=dropout),
-            nn.Linear(in_features, 256),
+        # ---- Aux branch: small MLP for structured features ----
+        aux_hidden = 32
+        self.aux_net = nn.Sequential(
+            nn.Linear(num_aux_features, aux_hidden),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=dropout * 0.5),
-            nn.Linear(256, num_grades),
+            nn.Dropout(dropout * 0.5),
         )
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # ---- Combined head ----
+        combined_dim = img_dim + aux_hidden
+        self.head = nn.Sequential(
+            nn.Dropout(dropout),
+            nn.Linear(combined_dim, 256),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout * 0.5),
+            nn.Linear(256, 64),
+            nn.ReLU(inplace=True),
+            nn.Linear(64, 1),
+        )
+
+        # Store config for checkpoint saving
+        self.config = {
+            "num_aux_features": num_aux_features,
+            "pretrained": pretrained,
+            "dropout": dropout,
+        }
+
+    def forward(
+        self,
+        images: torch.Tensor,
+        aux: torch.Tensor,
+    ) -> torch.Tensor:
         """
         Args:
-            x: (B, 3, 224, 224) normalized image tensor
+            images: (B, 3, 224, 224) card images
+            aux:    (B, 11) auxiliary features
 
         Returns:
-            (B, 10) logits — use .argmax(dim=1) + 1 for grade prediction
+            (B, 1) predicted grades (raw — not clamped)
         """
-        features = self.features(x)
-        pooled = self.pool(features).flatten(1)
-        return self.classifier(pooled)
+        # Image features
+        img_features = self.features(images)
+        img_features = self.pool(img_features).flatten(1)  # (B, 1280)
 
-    def predict_grade(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        # Aux features
+        aux_features = self.aux_net(aux)  # (B, 32)
+
+        # Combine and predict
+        combined = torch.cat([img_features, aux_features], dim=1)  # (B, 1312)
+        return self.head(combined)  # (B, 1)
+
+    def predict(
+        self,
+        images: torch.Tensor,
+        aux: torch.Tensor,
+    ) -> torch.Tensor:
         """
-        Predict grade with confidence.
+        Predict grades clamped to valid 1.0-10.0 range.
+
+        Args:
+            images: (B, 3, 224, 224) card images
+            aux:    (B, 11) auxiliary features
 
         Returns:
-            grades:      (B,) predicted PSA grades (1-10)
-            confidences: (B,) confidence scores (0-1)
+            (B,) predicted grades in [1.0, 10.0]
         """
-        logits = self.forward(x)
-        probs = torch.softmax(logits, dim=1)
-        confidences, indices = probs.max(dim=1)
-        grades = indices + 1  # 0-indexed → 1-indexed
-        return grades, confidences
+        self.eval()
+        with torch.no_grad():
+            raw = self.forward(images, aux).squeeze(-1)
+            return raw.clamp(1.0, 10.0)
+
+    def predict_with_confidence(
+        self,
+        images: torch.Tensor,
+        aux: torch.Tensor,
+    ) -> dict:
+        """
+        Predict grade with a simple confidence estimate.
+
+        Confidence is based on how close the prediction is to a whole
+        or half grade (predictions near X.0 or X.5 are more confident
+        than those near X.25 or X.75, which suggest the model is
+        between two grades).
+
+        Returns:
+            Dict with 'grade', 'rounded_grade', 'confidence'
+        """
+        self.eval()
+        with torch.no_grad():
+            raw = self.forward(images, aux).squeeze(-1).clamp(1.0, 10.0)
+
+            # Round to nearest 0.5
+            rounded = (raw * 2).round() / 2
+
+            # Confidence: how close prediction is to the rounded value
+            # Max confidence when prediction == rounded (distance = 0)
+            # Min confidence when prediction is 0.25 away (between grades)
+            distance = (raw - rounded).abs()
+            confidence = 1.0 - (distance / 0.25).clamp(0, 1)
+
+            return {
+                "grade": raw,
+                "rounded_grade": rounded,
+                "confidence": confidence,
+            }
 
     def freeze_backbone(self):
-        """Freeze the EfficientNet backbone (train only the head)."""
+        """Freeze EfficientNet backbone for Phase 1 training."""
         for param in self.features.parameters():
             param.requires_grad = False
 
     def unfreeze_backbone(self):
-        """Unfreeze backbone for full fine-tuning."""
+        """Unfreeze for Phase 2 fine-tuning."""
         for param in self.features.parameters():
             param.requires_grad = True
 
 
-class OrdinalLoss(nn.Module):
-    """
-    Cross-entropy + ordinal penalty.
+# ---------------------------------------------------------------------------
+# Loss function
+# ---------------------------------------------------------------------------
 
-    Standard cross-entropy treats all wrong predictions equally.
-    This adds a penalty scaled by how far off the prediction is,
-    so predicting 8 when the answer is 9 is penalized less than
-    predicting 3 when the answer is 9.
+class GradeLoss(nn.Module):
+    """
+    Combined regression loss for grade prediction.
+
+    Smooth L1 (Huber) loss for robustness to outlier labels, plus an
+    optional ordinal penalty that adds extra cost when predictions are
+    far from the target (e.g., predicting 3 for a grade 9 card).
 
     Args:
-        num_classes:    Number of grade classes (10).
-        ordinal_weight: How much to weight the ordinal penalty (0-1).
+        ordinal_weight: Weight for the ordinal distance penalty.
+        huber_delta: Delta for Smooth L1 loss (transition point
+                     between L1 and L2 behavior).
     """
 
-    def __init__(self, num_classes: int = 10, ordinal_weight: float = 0.3):
+    def __init__(self, ordinal_weight: float = 0.1, huber_delta: float = 1.0):
         super().__init__()
-        self.ce = nn.CrossEntropyLoss()
-        self.num_classes = num_classes
+        self.huber = nn.SmoothL1Loss(beta=huber_delta)
         self.ordinal_weight = ordinal_weight
 
-        # Distance matrix: distance[i][j] = |i - j| / (num_classes - 1)
-        distance = torch.zeros(num_classes, num_classes)
-        for i in range(num_classes):
-            for j in range(num_classes):
-                distance[i][j] = abs(i - j) / (num_classes - 1)
-        self.register_buffer("distance", distance)
-
-    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        predictions: torch.Tensor,
+        targets: torch.Tensor,
+    ) -> torch.Tensor:
         """
         Args:
-            logits:  (B, 10) raw model output
-            targets: (B,) ground truth grades as indices (0-9)
+            predictions: (B, 1) or (B,) predicted grades
+            targets:     (B,) target grades (1.0 - 10.0)
         """
-        ce_loss = self.ce(logits, targets)
+        preds = predictions.squeeze(-1)
 
-        # Ordinal penalty: expected distance between prediction and target
-        probs = torch.softmax(logits, dim=1)
-        target_distances = self.distance[targets]
-        ordinal_loss = (probs * target_distances).sum(dim=1).mean()
+        # Primary loss: Smooth L1
+        huber_loss = self.huber(preds, targets)
 
-        return ce_loss + self.ordinal_weight * ordinal_loss
+        # Ordinal penalty: squared distance normalized by grade range
+        # This adds extra penalty for being way off
+        if self.ordinal_weight > 0:
+            distance = (preds - targets).abs()
+            ordinal_penalty = (distance / 9.0).pow(2).mean()  # Normalized by max range
+            return huber_loss + self.ordinal_weight * ordinal_penalty
+
+        return huber_loss
