@@ -1,6 +1,6 @@
 # PokéGrader
 
-AI-powered Pokémon card condition grading from your phone. Guides you through a multi-view inspection, analyzes centering, corners, edges, and surface quality, then predicts a PSA 1–10 grade — no mailing your cards and waiting months.
+AI-powered Pokémon card condition grading from your phone. Guides you through a multi-view inspection, analyzes centering, corners, edges, and surface quality, then predicts a PSA 1–10 grade.
 
 > **Status:** v2 in development — multi-view guided capture with real-time tilt sensing, interactive AI inspection agent, and per-factor grading models. v1 beta (single-photo centering analysis) is live.
 
